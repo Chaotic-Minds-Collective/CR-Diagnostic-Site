@@ -43,3 +43,18 @@ document.querySelectorAll("[data-query]").forEach(button=>button.addEventListene
 $("#closeDialog").addEventListener("click",()=>dialog.close());$("#closeDialogBottom").addEventListener("click",()=>dialog.close());dialog.addEventListener("click",event=>{if(event.target===dialog)dialog.close();});
 const menuToggle=$("#menuToggle"),mainNav=$("#mainNav");menuToggle.addEventListener("click",()=>{const open=mainNav.classList.toggle("is-open");menuToggle.setAttribute("aria-expanded",String(open));});mainNav.querySelectorAll("a").forEach(link=>link.addEventListener("click",()=>{mainNav.classList.remove("is-open");menuToggle.setAttribute("aria-expanded","false");}));
 $("#year").textContent=new Date().getFullYear();renderCodes("all");renderGuides();
+
+// Symptom cards route visitors into the existing searchable draft library.
+document.querySelectorAll("[data-symptom-query]").forEach(card => {
+  card.addEventListener("click", event => {
+    const query = card.dataset.symptomQuery;
+    if (!query) return;
+    event.preventDefault();
+    searchInput.value = query;
+    search(query);
+    document.querySelector("#search").scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "start"
+    });
+  });
+});
