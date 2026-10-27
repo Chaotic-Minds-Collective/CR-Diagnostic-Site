@@ -4,7 +4,7 @@ This repository contains a static HTML, CSS, and JavaScript prototype for an evi
 
 ## Current milestone
 
-The `design/reference-public-mvp` branch redesigns the existing public-facing screens to follow the supplied 60-page design reference while preserving the current architecture.
+The public-facing redesign based on the supplied 60-page design reference has been merged into `main`. The work was developed on `design/reference-public-mvp`, which the project owner reports has since been deleted. The current `main` branch is the source of truth for the merged redesign.
 
 - Dark industrial visual system with provisional obsidian, steel, cyan, red, and gold colors
 - Responsive header and mobile navigation
@@ -35,12 +35,15 @@ Then visit `http://localhost:8000`.
 - Prices and membership screens in the reference are proposals, not approved offers.
 - The current placeholder emblem is not a final logo. Brand names, tagline, mascot, and production artwork remain subject to approval and IP/trademark review.
 - Do not use the prohibited phrase “Grease Monkey” as a brand or product name.
+- Source-level checks were performed before merge, including JavaScript syntax, duplicate HTML IDs, direct JavaScript selector-to-ID matches, key page targets, symptom routing, navigation-handler presence, reduced-motion CSS, minimum 48px key controls, and checks for an explicitly non-final brand notice and absence of external scripts/payment SDKs. These checks do **not** establish that the page has passed full browser, visual, accessibility, or end-to-end interaction testing.
 
 ## Release status
 
 - Architecture: static HTML/CSS/JavaScript retained
-- Current work: design feature branch only
-- Main branch: preserved; this work has not been merged
+- Public redesign: merged into `main`
+- Feature branch: owner reports `design/reference-public-mvp` was deleted; deletion has not been independently verified
+- Browser-based visual and interaction QA: outstanding
+- Automotive content/source review: outstanding
 - Production deployment: not performed
 - Domain or paid services: none purchased or configured
 - Public launch: not approved
