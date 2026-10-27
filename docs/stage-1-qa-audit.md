@@ -16,7 +16,7 @@
 | Third-party script tags | PASS | No externally hosted script sources found in the HTML. |
 | Network calls in application source | PASS, source scan only | No `fetch()`, `XMLHttpRequest`, or `WebSocket` references detected by the scan. This is not a security audit. |
 | Payment SDK references | PASS, source scan only | No obvious Stripe, PayPal, or checkout SDK references detected in the scanned HTML/JS. |
-| Reduced-motion styling | PASS | A `prefers-reduced-motion` rule is present. |
+| JavaScript syntax parse | PASS | The `app.js` source parses without a syntax error; this was a parse-only check and the code was not executed. |\n| CSS brace balance | PASS | Opening and closing brace counts match. This is a basic structural check, not a full CSS validator. |\n| Reduced-motion styling | PASS | A `prefers-reduced-motion` rule is present. |
 | Visible keyboard focus styling | PASS | `:focus-visible` styling is present. |
 | Responsive CSS breakpoints | PASS | Four `@media` blocks detected. |
 | Draft code library | PASS | 12 code objects detected in the local JavaScript data. |
@@ -24,7 +24,7 @@
 
 ## Important limitations
 
-This audit inspected source files through GitHub. It did **not** run the website in a real browser, execute a full JavaScript syntax check in the project environment, use a screen reader, test keyboard navigation end-to-end, or test mobile layouts at actual viewport sizes. Source scans can miss dynamic behavior and are not substitutes for runtime tests.
+This audit inspected source files through GitHub. A parse-only JavaScript syntax check and a basic CSS brace-balance check passed. It did **not** execute the application or run the website in a real browser, use a screen reader, test keyboard navigation end-to-end, or test mobile layouts at actual viewport sizes. Source scans can miss dynamic behavior and are not substitutes for runtime tests.
 
 The repository's README also identifies the code descriptions as drafts requiring qualified mechanic review and authoritative vehicle-specific references before public release. That restriction remains in force.
 
