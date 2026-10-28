@@ -54,3 +54,12 @@ Then visit `http://localhost:8000`.
 - `styles.css` — responsive visual system
 - `app.js` — search, filters, symptom routing, and code/guide details
 - `assets/brand-mark.svg` — original placeholder emblem
+
+
+## Engineering workflow and audit records
+
+- [Supabase integration and migration workflow](docs/supabase-integration-and-migrations.md)
+- [Security and integration audit](docs/security-and-integration-audit.md)
+- Static quality checks run in GitHub Actions for pull requests and pushes to `main`.
+- Use the pull request template to document tests, safety/content review, database/RLS impact, and recovery plans.
+- The frontend is **not connected to Supabase yet**. Do not add client credentials or apply migrations until access to the intended project is restored, the live schema is baselined, and RLS/grants are verified.
