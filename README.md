@@ -30,7 +30,7 @@ Then visit `http://localhost:8000`.
 
 - Search and guide content is a small, local draft library. There is no live vehicle connection, VIN decoding, external code database, or AI diagnosis.
 - My Garage, accounts, saved histories, Parts Finder, community, admin tools, translations, and billing are not implemented in this milestone.
-- No backend, analytics, external API, payments, or production hosting is configured.
+- The frontend is not connected to a backend. A separate Supabase project was previously found to contain account/vehicle/diagnostic-history tables, but the intended project is currently unavailable through the connected account and must be re-verified before use. No analytics, external API integration, payments, or production hosting is configured.
 - Diagnostic content requires qualified mechanic review and authoritative references before public release. A diagnostic trouble code is evidence, not proof that a particular component has failed. Vehicle-specific service information takes precedence.
 - Prices and membership screens in the reference are proposals, not approved offers.
 - The current placeholder emblem is not a final logo. Brand names, tagline, mascot, and production artwork remain subject to approval and IP/trademark review.
@@ -54,3 +54,12 @@ Then visit `http://localhost:8000`.
 - `styles.css` — responsive visual system
 - `app.js` — search, filters, symptom routing, and code/guide details
 - `assets/brand-mark.svg` — original placeholder emblem
+
+
+## Engineering workflow and audit records
+
+- [Supabase integration and migration workflow](docs/supabase-integration-and-migrations.md)
+- [Security and integration audit](docs/security-and-integration-audit.md)
+- Static quality checks run in GitHub Actions for pull requests and pushes to `main`.
+- Use the pull request template to document tests, safety/content review, database/RLS impact, and recovery plans.
+- The frontend is **not connected to Supabase yet**. Do not add client credentials or apply migrations until access to the intended project is restored, the live schema is baselined, and RLS/grants are verified.
