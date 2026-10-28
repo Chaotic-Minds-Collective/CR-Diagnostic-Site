@@ -1,0 +1,51 @@
+name: Static quality checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: node --check app.js
+
+      - name: Check HTML structure and local anchors
+        run: python scripts/validate-static-site.py
+
+      - name: Check CSS brace balance
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          css = Path("styles.css").read_text(encoding="utf-8")
+          if css.count("{") != css.count("}"):
+              raise SystemExit("CSS brace counts do not match")
+          print("CSS brace balance: PASS")
+          PY
+
+      - name: Prevent server-side Supabase secrets in browser files
+        run: |
+          if grep -En 'service_role|sb_secret_[A-Za-z0-9_-]+' index.html app.js styles.css; then
+            echo "Possible server-side Supabase credential found in browser source."
+            exit 1
+          fi
+          echo "No known service-role/secret-key patterns found in browser source."
