@@ -30,7 +30,7 @@ Then visit `http://localhost:8000`.
 
 - Search and guide content is a small, local draft library. There is no live vehicle connection, VIN decoding, external code database, or AI diagnosis.
 - My Garage, accounts, saved histories, Parts Finder, community, admin tools, translations, and billing are not implemented in this milestone.
-- No backend, analytics, external API, payments, or production hosting is configured.
+- The frontend is not connected to a backend. A separate Supabase project was previously found to contain account/vehicle/diagnostic-history tables, but the intended project is currently unavailable through the connected account and must be re-verified before use. No analytics, external API integration, payments, or production hosting is configured.
 - Diagnostic content requires qualified mechanic review and authoritative references before public release. A diagnostic trouble code is evidence, not proof that a particular component has failed. Vehicle-specific service information takes precedence.
 - Prices and membership screens in the reference are proposals, not approved offers.
 - The current placeholder emblem is not a final logo. Brand names, tagline, mascot, and production artwork remain subject to approval and IP/trademark review.
