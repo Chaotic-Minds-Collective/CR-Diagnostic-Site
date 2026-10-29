@@ -1,4 +1,4 @@
-name: Static quality checks
+name: Application quality checks
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  static-checks:
+  application-checks:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -26,26 +26,21 @@ jobs:
         with:
           node-version: 22
 
-      - name: Check JavaScript syntax
-        run: node --check app.js
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
 
-      - name: Check HTML structure and local anchors
-        run: python scripts/validate-static-site.py
+      - name: TypeScript validation
+        run: npm run lint
 
-      - name: Check CSS brace balance
+      - name: Production build
+        run: npm run build
+
+      - name: Check for server-side Supabase secrets in frontend source
+        shell: bash
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          css = Path("styles.css").read_text(encoding="utf-8")
-          if css.count("{") != css.count("}"):
-              raise SystemExit("CSS brace counts do not match")
-          print("CSS brace balance: PASS")
-          PY
-
-      - name: Prevent server-side Supabase secrets in browser files
-        run: |
-          if grep -En 'service_role|sb_secret_[A-Za-z0-9_-]+' index.html app.js styles.css; then
-            echo "Possible server-side Supabase credential found in browser source."
+          set -euo pipefail
+          if grep -R -n -E 'service_role|sb_secret_[A-Za-z0-9_-]+' src index.html; then
+            echo "Possible server-side Supabase credential found in frontend source."
             exit 1
           fi
-          echo "No known service-role/secret-key patterns found in browser source."
+          echo "No known service-role/secret-key patterns found in frontend source."
