@@ -24,7 +24,7 @@ The root `package.json` defines:
 
 The repository does not contain a committed `package-lock.json`. The current quality workflow uses `npm install`, TypeScript validation, and Vite build. The latest observed main-branch quality run for commit `0872893a815638f341e4bf798222a1c50603122d` completed successfully. The lockfile/reproducible-install task remains open.
 
-The manual Pages workflow has been updated to build the Vite app and publish `dist/`. It remains configured for manual dispatch and a `main` guard. Separately, GitHub recorded a successful `pages build and deployment` event (`dynamic`) for the same main commit, run ID `41008189696`. The Pages source setting and live URL have not been verified. Treat the site as potentially published and do not trigger another deployment or alter Pages settings without explicit approval.
+The manual Pages workflow has been updated to build the Vite app and publish `dist/`. It remains configured for manual dispatch and a `main` guard. Separately, GitHub recorded a successful `pages build and deployment` event (`dynamic`) for the same main commit, run ID `41008189696`. Its job steps explicitly ran **Build with Jekyll** and **Deploy to GitHub Pages**, not the custom Vite workflow. This strongly indicates a separate branch/Jekyll publication path that does not build `dist/`; publishing the Vite root `index.html` without building the app may produce a broken site. The exact Pages source setting and live URL have not been verified. Treat the site as potentially published and the served content as unverified. Do not trigger another deployment or alter Pages settings without explicit approval.
 
 ### Supabase live inventory
 
@@ -103,7 +103,7 @@ The current main quality workflow passed, but that does not make dependency inst
 ## Phase C — Hosting and release control
 
 - Keep the custom Pages workflow manual-only and guarded to `main`.
-- A separate dynamic GitHub Pages build/deployment event succeeded on the latest main commit. Verify the Pages source setting and live URL with the owner; do not assume the event was an approved launch.
+- A separate dynamic GitHub Pages event succeeded on the latest main commit using Jekyll and then deployed to Pages. It did not run the custom Vite `dist/` build. Verify the Pages source setting and live URL with the owner; do not assume the event was an approved launch or a working Vite release.
 - Do not trigger another deployment or change Pages settings during remediation.
 - Before any future public release, complete mechanic review, authoritative references, brand/IP review, accessibility/browser QA, privacy/safety notices, and explicit owner approval.
 
