@@ -1,7 +1,7 @@
 # Security and integration audit
 
-**Audit date:** 2026-10-29 Pacific (read-only database observations recorded 2026-10-30 UTC)  
-**Repository baseline:** `main` at `0872893a815638f341e4bf798222a1c50603122d`  
+**Audit date:** 2026-10-30 UTC  
+**Repository baseline:** `main` at `8f0ebeb353fe093538ef2ce81d2b92aa4bae7a84`  
 **Supabase project:** Greasy Dojo Site (`rwehmmvjahpfeugfaxis`), `us-east-1`  
 **Status:** Updated read-only audit. Findings are not remediated. No database or production settings were changed.
 
@@ -18,11 +18,11 @@ The current website is a React 19 / TypeScript / Vite application. Its public di
 | Frontend | React 19, TypeScript 5.7, Vite 6; local educational content in `src/data/diagnosticsData.ts`. | Current |
 | Supabase client | No frontend Supabase client or database calls are implemented. | Not connected |
 | Core content | 12 OBD-II draft entries, six guides, symptom cards, and Guided Intake. | Educational drafts; mechanic review and references remain required |
-| CI | Main-branch application quality workflow completed successfully for commit `0872893`. | Passing at last observed run |
-| Dependencies | `package-lock.json` is absent; CI currently uses `npm install`, not reproducible `npm ci`. | Open issue |
+| CI | Main-branch application quality workflow completed successfully for commit `8f0ebeb`, including `npm ci`, TypeScript validation, Vite build, and secret-pattern scan. | Passing |
+| Dependencies | npm-generated `package-lock.json` (lockfile v3) is committed; quality and manual Pages workflows use `npm ci`. | Fixed in PR #13 |
 | Browser QA | Full browser, mobile, screen-reader, and end-to-end checks remain outstanding. | Release blocker |
 | Custom Pages workflow | `.github/workflows/deploy-pages.yml` is manual-only and guarded to run only from `main`; it builds Vite `dist/`. | Source confirmed |
-| Pages event | GitHub recorded a separate `pages build and deployment` run (`41008189696`) with event `dynamic`, on commit `0872893`, conclusion `success`. | A Pages deployment/build completed; Pages settings and live URL have not been verified. Do not infer owner launch approval. |
+| Pages event | GitHub recorded repeat `pages build and deployment` run `41077627325` on commit `8f0ebeb`, event `dynamic`, conclusion `success`; its steps again ran Jekyll, artifact upload, and Pages deploy. | Wrong publication path remains active; Pages source and live URL require owner verification. |
 | Brand and launch | Name, logo, artwork, and mechanic-reviewed content remain provisional/unapproved. | Release blocker |
 
 ## Verified Supabase inventory
@@ -71,11 +71,11 @@ The policy **“Anyone can view shared cases with hidden VINs.”** is a SELECT 
 
 Effective privilege checks confirmed that both `anon` and `authenticated` have all of the following privileges on each of the five public tables: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, and `TRIGGER`. RLS still filters row-level operations, but it does not apply to operations such as `TRUNCATE`; the extra privileges are unnecessary for the current public educational site.
 
-Default ACL inspection found broad default privileges under both the `postgres` and `supabase_admin` owners for future public tables, sequences, and functions, including table DML/administrative privileges and function EXECUTE for `anon`, `authenticated`, and `service_role`.
+Default ACL inspection at 2026-10-30 16:34 UTC still found broad default privileges under both `postgres` and `supabase_admin` for future public tables, sequences, and functions, including table DML/administrative privileges and function EXECUTE for `anon`, `authenticated`, and `service_role`. Supabase's [October 30 Data API exposure change](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically) says default table/sequence grants are being removed for future objects while existing table grants remain unchanged. This project still reports broad defaults in the live catalog; do not assume the platform rollout has already corrected this project. Recheck after rollout and explicitly review each object owner.
 
 **Impact:** Future objects may become API-accessible by default, increasing the chance that a later table or function is exposed unintentionally.
 
-**Required direction:** Review current and default privileges by object owner and schema. Revoke unnecessary defaults and grant only the minimum required by a separately approved feature. Do not apply blanket revocations until all authorized clients and object owners are understood.
+**Required direction:** Review current and default privileges by object owner and schema. Supabase's October 30 change does not revoke grants from existing tables; each existing table still requires an explicit per-table access decision. Revoke unnecessary defaults and grant only the minimum required by a separately approved feature. Do not apply blanket revocations until all authorized clients and object owners are understood. New public tables must receive explicit, role-specific grants and RLS policies in the same reviewed migration; do not use blanket `GRANT ALL`.
 
 ### Ownership and integrity review
 
@@ -113,5 +113,5 @@ These are performance findings, not authorization fixes. Resolve security semant
 - Supabase frontend integration remains unimplemented and must remain blocked until the security acceptance tests pass.
 - Diagnostic content requires qualified mechanic review and authoritative vehicle-appropriate references.
 - Browser, mobile, accessibility, and end-to-end testing remain outstanding.
-- The GitHub Pages dynamic deployment event succeeded, but the served URL and Pages source configuration have not been verified. Treat this as a potential live-publication condition requiring owner review.
+- The GitHub Pages dynamic deployment event repeated after PR #13 merged and again used Jekyll rather than the Vite `dist/` artifact. The Pages source must be switched to GitHub Actions by the repository owner; the available connector cannot write this production setting. Treat the currently served URL/content as unverified.
 - No database, GitHub Pages setting, production infrastructure, paid service, or user data was changed as part of this read-only audit.
