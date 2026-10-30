@@ -1,61 +1,117 @@
 # Security and integration audit
 
-**Audit date:** 2026-10-28  
-**Scope:** Current `main` source tree, repository workflow files, and previously observed Supabase metadata.  
-**Status:** Partial audit. GitHub source inspection is current; the Supabase project is not available through the current connector authorization, so live database findings below are marked as last-known and require re-verification.
+**Audit date:** 2026-10-30 UTC  
+**Repository baseline:** `main` at `8f0ebeb353fe093538ef2ce81d2b92aa4bae7a84`  
+**Supabase project:** Greasy Dojo Site (`rwehmmvjahpfeugfaxis`), `us-east-1`  
+**Status:** Updated read-only audit. Findings are not remediated. No database or production settings were changed.
 
 ## Executive summary
 
-The site is still a static educational prototype. The public page does not currently connect to Supabase. The database tables last observed support personal accounts and vehicle/repair histories, but do not constitute a content-management system for the public diagnostic library. Do not treat the website as database-connected or production-ready.
+The current website is a React 19 / TypeScript / Vite application. Its public diagnostic library is bundled locally; the frontend is not connected to Supabase. The database contains five account/vehicle-history tables and has no recorded migrations. All five public tables have RLS enabled, but the current policies and grants are not sufficiently restrictive for a future authenticated product.
 
-## Source and repository observations
+**Do not connect the frontend to this database or introduce user accounts until the profile exposure, role self-escalation risk, shared-case exposure, broad grants, and default privileges have been corrected and tested.**
 
-| Area | Finding | Status / action |
+## Repository and application observations
+
+| Area | Verified finding | Status |
 |---|---|---|
-| Frontend | `index.html`, `styles.css`, and `app.js` form a static site; search/code/guide data is embedded in `app.js`. | Confirmed by source inspection. |
-| Supabase client | No client initialization or Supabase query calls found in the inspected application source. | Not connected. |
-| Network/API behavior | Prior source-level scan found no `fetch()`, `XMLHttpRequest`, or `WebSocket` references. | Static scan only; not runtime proof. |
-| Content accuracy | README and QA notes state the 12 trouble-code entries and six guides are drafts needing qualified mechanic review and authoritative, vehicle-appropriate references. | Release blocker. |
-| Runtime/accessibility | Source-level checks were documented, but browser, screen-reader, mobile viewport, and end-to-end interaction testing remain outstanding. | Release blocker. |
-| Hosting workflow | `.github/workflows/deploy-pages.yml` uses manual `workflow_dispatch`, only permits the deployment job from `main`, and grants the job only the listed Pages permissions. | Source confirmed. Do not trigger or deploy without approval. |
-| Change control | PR #5, “Prepare safe manual GitHub Pages deployment,” is merged into `main`; current branch search showed only `main`, and open-PR search returned none. | Verified via GitHub API. |
-| Repo controls | Reading branch protection was denied by the GitHub integration; Pages and Actions settings endpoints were not available through the read tool. | Unknown; owner must verify in GitHub settings. |
-| Dependency management | No package manifest or dependency lockfile appears in the repository tree. | Consistent with plain static files; no dependency audit can be run from a package manifest. |
-| Brand/release | Site copy marks identity and content as provisional; public launch has not been approved in project records. | Keep provisional. |
+| Frontend | React 19, TypeScript 5.7, Vite 6; local educational content in `src/data/diagnosticsData.ts`. | Current |
+| Supabase client | No frontend Supabase client or database calls are implemented. | Not connected |
+| Core content | 12 OBD-II draft entries, six guides, symptom cards, and Guided Intake. | Educational drafts; mechanic review and references remain required |
+| CI | Main-branch application quality workflow completed successfully for commit `8f0ebeb`, including `npm ci`, TypeScript validation, Vite build, and secret-pattern scan. | Passing |
+| Dependencies | npm-generated `package-lock.json` (lockfile v3) is committed; quality and manual Pages workflows use `npm ci`. | Fixed in PR #13 |
+| Browser QA | Full browser, mobile, screen-reader, and end-to-end checks remain outstanding. | Release blocker |
+| Custom Pages workflow | `.github/workflows/deploy-pages.yml` is manual-only and guarded to run only from `main`; it builds Vite `dist/`. | Source confirmed |
+| Pages event | GitHub recorded repeat `pages build and deployment` run `41077627325` on commit `8f0ebeb`, event `dynamic`, conclusion `success`; its steps again ran Jekyll, artifact upload, and Pages deploy. | Wrong publication path remains active; Pages source and live URL require owner verification. |
+| Brand and launch | Name, logo, artwork, and mechanic-reviewed content remain provisional/unapproved. | Release blocker |
 
-## Last-known Supabase inventory (re-verify after access is restored)
+## Verified Supabase inventory
 
-The prior successful inspection reported these public tables, all with RLS enabled and zero rows at the time:
+The intended project is accessible again. Read-only inspection confirmed:
 
-- `profiles`: auth user ID, email, full name, role, skill level, preferred language, timestamps.
-- `garages`: user/vehicle information (year, make, model, engine, nickname, primary flag).
-- `diagnostic_cases`: user/vehicle ownership, title, symptoms, codes, diagnostic status, notes, sharing flag.
-- `maintenance_reminders`: user/vehicle, title, due date/mileage, status.
-- `repair_records`: user/vehicle, title, cost, receipt URL, performed date.
+- Project name/ref: **Greasy Dojo Site** / `rwehmmvjahpfeugfaxis`
+- Region: `us-east-1`; database engine: PostgreSQL 17
+- Five public tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, `repair_records`
+- All five tables reported zero rows at the time of inspection. This does not prove the database is disposable or unused by other clients.
+- RLS is enabled on all five tables; `FORCE ROW LEVEL SECURITY` is false on all five.
+- The migration list is empty.
+- No views, functions, or triggers were found in the `public` schema; no trigger was found on `auth.users` to provision profile rows.
+- All five public application tables are owned by `postgres`; their relation ACLs grant all table privileges to `anon`, `authenticated`, and `service_role`.
+- No public-schema sequences were found. The five installed extensions are `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, and `uuid-ossp`.
+- Storage system tables exist, but no storage buckets or storage policies were returned.
+- Security advisor returned no lints. Performance advisor returned three categories of findings described below. A clean advisor result is not proof that manual authorization logic is safe.
 
-The last-known migration list was empty and no Edge Functions were listed. Empty migration history does not mean the schema is empty or safe to recreate.
+### Critical/high-priority access findings
 
-### High-priority potential data exposure
+#### 1. Public profile exposure
 
-The last-known `profiles` policy list included **“Public profiles are viewable by everyone.”** The table includes an email column. If the policy permits unrestricted SELECT and the API role has SELECT grants, public callers may be able to read profile emails. This is a risk requiring immediate verification of the exact policy expression, table grants, and effective API access. Do not assume RLS being enabled alone makes a table safe. Prefer exposing only explicitly public profile fields, and keep email private unless a documented feature requires it.
+The `profiles` table contains `email`, `full_name`, `role`, `skill_level`, and other profile fields. Its policy **“Public profiles are viewable by everyone.”** is a SELECT policy for `public` with expression `true`. The `anon` role has SELECT privilege on the table.
 
-Other last-known policy names suggested owner-scoped access for garages, diagnostic cases, reminders, and repair records, plus a policy for shared diagnostic cases. Names are not proof of correctness: verify every policy expression, command, role, and WITH CHECK condition, including whether shared cases truly hide VINs and private notes.
+**Impact:** Public API callers may read every profile column, including email addresses and role values. There is no column-level public projection in this table policy.
 
-## Required checks when Supabase access is restored
+**Required direction:** Remove public access to the private profile table. If public profile display is ever required, expose a separate allowlisted projection that excludes email, role, and private metadata.
 
-1. Confirm project ref, organization, region, plan, health, API URL, and enabled publishable keys.
-2. Inventory every schema and object, including views, functions, triggers, extensions, storage buckets, and Auth configuration.
-3. Review table grants and all RLS policies for every role and operation; test as anonymous, user A, user B, and admin where applicable.
-4. Verify foreign keys, cascades, uniqueness/check constraints, nullable fields, defaults, and indexes for user/vehicle joins and common filters.
-5. Run Supabase security and performance advisors and record each result with severity, remediation, and owner.
-6. Confirm backup/PITR availability and recovery procedure before schema changes.
-7. Capture and reconcile the live schema into Git-tracked migrations. Do not replay a guessed schema into the existing project.
-8. Connect the frontend only after policy/grant tests pass and the user-facing feature scope is defined.
-9. Test successful, denied, empty, expired-session, and network-failure states in a browser.
-10. Re-run the audit after fixes and record evidence.
+#### 2. Profile role self-escalation risk
 
-## Current blockers and limits
+The policy **“Users can update their own profile.”** permits updates where `auth.uid() = id`. The `authenticated` role has UPDATE privilege, including on the `role` column. The role check constraint explicitly permits values including `admin`. The policy does not restrict which profile columns may be changed.
 
-- The intended last-known project ref `rwehmmvjahpfeugfaxis` is not returned by either currently connected Supabase account. Requests against that ref now return a permission error. Other projects visible in those accounts must not be substituted.
-- Live table definitions, exact RLS expressions, grants, Auth settings, keys, extensions, advisors, and migrations could not be re-read in this pass.
-- No database or production settings were changed. No website deployment was run.
+**Impact:** A normal authenticated user appears able to change their own role to a privileged value. This is a high-priority authorization vulnerability. The exact exploit path has not been exercised with a synthetic account; treat the risk as unresolved and block account integration.
+
+**Required direction:** Users must not be able to write authorization fields. Role assignment must use a separate, controlled administrative process. Validate with negative tests using synthetic accounts before any production change.
+
+#### 3. Shared diagnostic-case overexposure
+
+The policy **“Anyone can view shared cases with hidden VINs.”** is a SELECT policy for `public` with expression `is_shared = true`. It exposes rows from `diagnostic_cases` without a column-level projection. The table contains `user_id`, `vehicle_id`, `notes`, symptoms, codes, title, and status. The inspected table definition has no VIN column, and no field-redaction mechanism is present.
+
+**Impact:** Marking a case shared can expose owner identifiers, vehicle references, and private notes alongside the intended educational details. The policy name does not establish that private fields are hidden.
+
+**Required direction:** Disable public row sharing until a separate allowlisted public-case representation and explicit moderation/consent model are designed and tested.
+
+#### 4. Broad table and default privileges
+
+Effective privilege checks confirmed that both `anon` and `authenticated` have all of the following privileges on each of the five public tables: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, and `TRIGGER`. RLS still filters row-level operations, but it does not apply to operations such as `TRUNCATE`; the extra privileges are unnecessary for the current public educational site.
+
+Default ACL inspection at 2026-10-30 16:34 UTC still found broad default privileges under both `postgres` and `supabase_admin` for future public tables, sequences, and functions, including table DML/administrative privileges and function EXECUTE for `anon`, `authenticated`, and `service_role`. Supabase's [October 30 Data API exposure change](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically) says default table/sequence grants are being removed for future objects while existing table grants remain unchanged. This project still reports broad defaults in the live catalog; do not assume the platform rollout has already corrected this project. Recheck after rollout and explicitly review each object owner.
+
+**Impact:** Future objects may become API-accessible by default, increasing the chance that a later table or function is exposed unintentionally.
+
+**Required direction:** Review current and default privileges by object owner and schema. Supabase's October 30 change does not revoke grants from existing tables; each existing table still requires an explicit per-table access decision. Revoke unnecessary defaults and grant only the minimum required by a separately approved feature. Do not apply blanket revocations until all authorized clients and object owners are understood. New public tables must receive explicit, role-specific grants and RLS policies in the same reviewed migration; do not use blanket `GRANT ALL`.
+
+### Ownership and integrity review
+
+Current owner policies generally compare `auth.uid()` with the row's `user_id`, but related vehicle ownership is not checked in the same policy. The foreign keys establish that a referenced vehicle exists; they do not establish that it belongs to the same user. Inserts/updates for diagnostic cases, maintenance reminders, and repair records therefore need explicit cross-owner vehicle tests and, if required, stronger constraints/policies.
+
+The validated foreign keys cascade profile deletion into garages, cases, reminders, and repair records. Deleting a garage sets `diagnostic_cases.vehicle_id` to NULL, but cascades deletion of related reminders and repair records. These delete behaviors must be included in the retention/deletion and recovery design. No trigger was found to automatically create a profile row after an Auth user is created; profile provisioning is therefore an unresolved signup-design requirement.
+
+The profile UPDATE policy and the combined `ALL` policies also need explicit review of `USING`, `WITH CHECK`, permitted columns, and command-specific behavior. Policy names are not proof of authorization correctness.
+
+## Performance advisor findings
+
+The performance advisor returned:
+
+- **7 unindexed foreign keys** across diagnostic cases, garages, reminders, and repair records.
+- **8 RLS initialization-plan warnings** where `auth.uid()` is evaluated in a row-level expression without a scalar subquery wrapper.
+- **5 multiple-permissive-policy warnings** for SELECT on `diagnostic_cases` across database roles.
+
+These are performance findings, not authorization fixes. Resolve security semantics first, then assess index choices against expected query patterns and re-run advisors.
+
+## Required remediation sequence
+
+1. Confirm the intended product feature and every authorized database consumer before changing grants.
+2. Verify backup/PITR availability and a recovery procedure.
+3. Capture the full live schema, constraints, indexes, grants, default ACLs, role memberships, policies, Auth settings, storage configuration, extensions, and migration state.
+4. Design least-privilege grants and RLS for guest, authenticated user, and separately controlled administrator paths.
+5. Prevent profile email exposure and role self-assignment; redesign public case sharing as a field-allowlisted model.
+6. Enforce that linked vehicle records belong to the same owner.
+7. Create synthetic-user negative tests in a safe non-production environment. Do not create a paid branch without approval.
+8. Reconcile the existing live schema into Git-tracked migrations. Do not replay a guessed baseline.
+9. Apply no production DDL or privilege changes until a separate review, recovery plan, and explicit authorization are complete.
+10. After security fixes, address advisor performance findings and repeat the audit.
+
+## Release blockers and boundaries
+
+- Supabase frontend integration remains unimplemented and must remain blocked until the security acceptance tests pass.
+- Diagnostic content requires qualified mechanic review and authoritative vehicle-appropriate references.
+- Browser, mobile, accessibility, and end-to-end testing remain outstanding.
+- The GitHub Pages dynamic deployment event repeated after PR #13 merged and again used Jekyll rather than the Vite `dist/` artifact. The Pages source must be switched to GitHub Actions by the repository owner; the available connector cannot write this production setting. Treat the currently served URL/content as unverified.
+- No database, GitHub Pages setting, production infrastructure, paid service, or user data was changed as part of this read-only audit.

@@ -4,36 +4,62 @@
 
 The public website is a React 19 / TypeScript single-page application built with Vite. Its educational diagnostic library is bundled locally; it does not need Supabase to serve public pages. The frontend is not connected to Supabase.
 
-Keep the Supabase GitHub integration enabled only as needed for reviewed database work. Do not enable automatic database branching or production database deployment without a separately reviewed requirement and explicit approval.
+The root `package.json` currently defines:
+- `npm run lint`: TypeScript validation via `tsc --noEmit`
+- `npm run build`: TypeScript project build followed by `vite build`
 
-## Prepared deployment path
+The repository now contains a real npm-generated `package-lock.json` (lockfile version 3). The quality and manual Vite deployment workflows use `npm ci` for reproducible dependency installation.
 
-- GitHub Pages deployment workflow: `.github/workflows/deploy-pages.yml`
+## Custom GitHub Pages workflow
+
+- Workflow: `.github/workflows/deploy-pages.yml`
 - Trigger: manual only (`workflow_dispatch`)
-- Production guard: the deployment job runs only when manually started from `main`
+- Guard: deployment job runs only when manually started from `main`
 - Build: Node.js 22, dependency installation, TypeScript validation, and Vite production build
-- Published artifact: the Vite `dist/` directory
-- Asset base: relative paths so bundled assets can resolve from a GitHub Pages project path or a root domain
-- No deployment is triggered by pull requests or pushes through this workflow.
+- Artifact: Vite `dist/` directory
+- Asset base: relative paths for GitHub Pages project paths and root-domain hosting
+- The custom workflow is not triggered by pushes or pull requests.
 
-A GitHub Pages `pages build and deployment` run was recorded as successful for commit `f206c8ee948d19a1aa7a5b2290df03b729fcec13` on 2026-10-29. The repository API connection does not expose the Pages configuration or verify the currently served URL and artifact. Confirm the Pages source and live behavior in repository settings before treating the site as released. This record is not owner approval for a launch.
+## Important Pages deployment observation
+
+GitHub recorded a separate **`pages build and deployment`** run:
+- Initial observed run ID: `41008189696` on commit `0872893a815638f341e4bf798222a1c50603122d`
+- Repeat run after PR #13 merged: `41077627325` on commit `8f0ebeb353fe093538ef2ce81d2b92aa4bae7a84`
+- Event: `dynamic`
+- Conclusion: `success`
+- Run time: 2026-10-30 UTC
+
+This was not the custom `workflow_dispatch` workflow described above. Both observed dynamic runs recorded **Build with Jekyll**, **Upload artifact**, and **Deploy to GitHub Pages**. The repeat run after the lockfile PR merged confirms that this branch/Jekyll publication path remains active. The custom Vite workflow builds `dist/`; the observed Jekyll run did not use that artifact. This strongly indicates that the separate Pages publication path is still building from repository source rather than using the Vite production output. Because the Vite root `index.html` references `/src/main.tsx`, publishing the source tree without a Vite build may result in a broken or incomplete site. The exact Pages source setting and currently served URL/content are not exposed by the available read access. On 2026-10-30, the repository owner confirmed in the project conversation that the Pages source was switched to GitHub Actions. This is an owner-reported setting change; the connected read-only GitHub API cannot independently inspect the setting. The served URL and artifact remain unverified until the Vite workflow is run under release approval and the resulting site is tested.
+
+**The Pages source switch is owner-reported complete.** Do not trigger another deployment as part of this documentation remediation. A successful deployment event or a changed source setting is not evidence of owner launch approval.
+
+## Quality and verification status
+
+- The latest main-branch application quality run for commit `8f0ebeb` completed successfully, including `npm ci`, TypeScript validation, Vite production build, and frontend secret-pattern scanning.
+- The custom Pages workflow builds `dist/` and deploys it through GitHub Actions, but remains manual-only and has not been run.
+- A real npm lockfile is committed; CI and the manual Pages workflow use `npm ci`.
+- Automated component/interaction tests and full browser/accessibility testing remain outstanding.
+- The owner reports the Pages source is now GitHub Actions; the setting has not been independently verified through the available API.
+- The GitHub Pages live URL, Vite deployment artifact, mobile behavior, screen-reader behavior, and runtime content have not been independently verified.
 
 ## Before public launch
 
+- [x] Owner confirmed the GitHub Settings → Pages → Build and deployment → Source was switched to **GitHub Actions** on 2026-10-30 (owner-reported; not independently visible through the connected API).
+- [ ] Verify the currently served URL and confirm the artifact/content matches the approved release; branch/Jekyll output must not be treated as a valid Vite build.
+- [ ] After release checks pass and the owner explicitly approves release, manually run the Vite Pages workflow from `main` and verify the deployed artifact and live URL.
 - [ ] Run the built application and test mobile navigation, search, category filters, symptom cards, Guided Intake, and guide details.
 - [ ] Review keyboard navigation, focus visibility, screen-reader announcements, and narrow mobile viewports.
 - [ ] Have a qualified mechanic review diagnostic content and add authoritative, vehicle-appropriate references.
-- [ ] Check that all visible functionality is real and that placeholders are clearly identified.
+- [ ] Check that all visible functionality is real and placeholders are clearly identified.
 - [ ] Confirm final public-facing name, copy, and original artwork approvals.
 - [ ] Complete the brand/IP review and document unresolved concerns.
 - [ ] Confirm privacy, terms, accessibility, and safety notices appropriate to the actual feature set.
 - [ ] Owner explicitly approves public launch.
-- [ ] In GitHub repository Settings → Pages, verify GitHub Actions is the intended build/deployment source.
-- [ ] Only after all checks and explicit approval, manually run the deployment workflow from `main` and verify the resulting URL.
+- [ ] Only after all checks and explicit approval, use the approved release process.
 
 ## Known limitations
 
 - No database, authentication, saved diagnostic history, AI diagnosis, VIN decoding, external vehicle data, payments, or custom domain is configured.
-- The diagnostic content is draft educational material and must not be presented as mechanic-reviewed.
-- Browser-level visual and interaction QA remains outstanding.
-- The workflow prepares a release path; it does not authorize or perform a release by itself.
+- Diagnostic content remains draft educational material and must not be presented as mechanic-reviewed.
+- Browser-level visual, interaction, and accessibility QA remains outstanding.
+- The custom deployment workflow prepares a release path; it does not authorize a release by itself.
