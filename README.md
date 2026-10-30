@@ -26,6 +26,7 @@ The public educational resource currently includes:
 - [Asset inventory](docs/asset-inventory.md)
 - [Changelog](docs/changelog.md)
 - [Diagnostic content review register](docs/content-review-register.md)
+- [Reference Desk source register](docs/reference-sources.md)
 
 ## Local Development
 
