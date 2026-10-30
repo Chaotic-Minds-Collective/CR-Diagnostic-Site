@@ -35,7 +35,9 @@ The intended project is accessible again. Read-only inspection confirmed:
 - All five tables reported zero rows at the time of inspection. This does not prove the database is disposable or unused by other clients.
 - RLS is enabled on all five tables; `FORCE ROW LEVEL SECURITY` is false on all five.
 - The migration list is empty.
-- No views, functions, or triggers were found in the `public` schema.
+- No views, functions, or triggers were found in the `public` schema; no trigger was found on `auth.users` to provision profile rows.
+- All five public application tables are owned by `postgres`; their relation ACLs grant all table privileges to `anon`, `authenticated`, and `service_role`.
+- No public-schema sequences were found. The five installed extensions are `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, and `uuid-ossp`.
 - Storage system tables exist, but no storage buckets or storage policies were returned.
 - Security advisor returned no lints. Performance advisor returned three categories of findings described below. A clean advisor result is not proof that manual authorization logic is safe.
 
@@ -69,7 +71,7 @@ The policy **“Anyone can view shared cases with hidden VINs.”** is a SELECT 
 
 Effective privilege checks confirmed that both `anon` and `authenticated` have all of the following privileges on each of the five public tables: `SELECT`, `INSERT`, `UPDATE`, `DELETE`, `TRUNCATE`, `REFERENCES`, and `TRIGGER`. RLS still filters row-level operations, but it does not apply to operations such as `TRUNCATE`; the extra privileges are unnecessary for the current public educational site.
 
-Default ACL inspection also found broad default privileges for `anon`, `authenticated`, and `service_role` on future public tables, sequences, and functions, including table DML/administrative privileges and function EXECUTE.
+Default ACL inspection found broad default privileges under both the `postgres` and `supabase_admin` owners for future public tables, sequences, and functions, including table DML/administrative privileges and function EXECUTE for `anon`, `authenticated`, and `service_role`.
 
 **Impact:** Future objects may become API-accessible by default, increasing the chance that a later table or function is exposed unintentionally.
 
@@ -78,6 +80,8 @@ Default ACL inspection also found broad default privileges for `anon`, `authenti
 ### Ownership and integrity review
 
 Current owner policies generally compare `auth.uid()` with the row's `user_id`, but related vehicle ownership is not checked in the same policy. The foreign keys establish that a referenced vehicle exists; they do not establish that it belongs to the same user. Inserts/updates for diagnostic cases, maintenance reminders, and repair records therefore need explicit cross-owner vehicle tests and, if required, stronger constraints/policies.
+
+The validated foreign keys cascade profile deletion into garages, cases, reminders, and repair records. Deleting a garage sets `diagnostic_cases.vehicle_id` to NULL, but cascades deletion of related reminders and repair records. These delete behaviors must be included in the retention/deletion and recovery design. No trigger was found to automatically create a profile row after an Auth user is created; profile provisioning is therefore an unresolved signup-design requirement.
 
 The profile UPDATE policy and the combined `ALL` policies also need explicit review of `USING`, `WITH CHECK`, permitted columns, and command-specific behavior. Policy names are not proof of authorization correctness.
 
