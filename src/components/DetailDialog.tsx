@@ -2,10 +2,10 @@ import React, { useEffect, useRef } from 'react';
 import { FIELD_GUIDES, TROUBLE_CODES } from '../data/diagnosticsData';
 import { DetailKind, DetailSelection } from '../types/diagnostics';
 
-interface DetailDialogProps { selection:DetailSelection|null; onClose:()=>void }
+interface DetailDialogProps { selection:DetailSelection|null; onClose:()=>void; onOpenDetail:(selection:DetailSelection)=>void }
 const DRAFT_DISCLAIMER = 'Educational draft only. Procedures and specifications vary by year, make, model, engine, and market. Verify with authoritative service information and a qualified technician when appropriate.';
 
-export const DetailDialog:React.FC<DetailDialogProps> = ({selection,onClose}) => {
+export const DetailDialog:React.FC<DetailDialogProps> = ({selection,onClose,onOpenDetail}) => {
   const dialogRef=useRef<HTMLDialogElement|null>(null);
   const selectedCode=selection?.kind===DetailKind.Code ? TROUBLE_CODES.find(c=>c.code===selection.id)??null : null;
   const selectedGuide=selection?.kind===DetailKind.Guide ? FIELD_GUIDES.find(g=>g.id===selection.id)??null : null;
@@ -22,6 +22,14 @@ export const DetailDialog:React.FC<DetailDialogProps> = ({selection,onClose}) =>
     }else if(dialog.open)dialog.close();
   },[isOpen,selection]);
 
+  const openRelated = (label:string) => {
+    const code = TROUBLE_CODES.find(item => item.code === label || item.searchTerms?.includes(label));
+    if (code) { onOpenDetail({kind:DetailKind.Code,id:code.code}); return true; }
+    const normalized = label.toLowerCase();
+    const guide = FIELD_GUIDES.find(item => normalized.includes(item.title.toLowerCase()) || item.title.toLowerCase().includes(normalized.replace(' field guide','')));
+    if (guide) { onOpenDetail({kind:DetailKind.Guide,id:guide.id}); return true; }
+    return false;
+  };
   const handleBackdropClick=(event:React.MouseEvent<HTMLDialogElement>)=>{
     if(event.target===dialogRef.current)onClose();
   };
@@ -40,7 +48,10 @@ export const DetailDialog:React.FC<DetailDialogProps> = ({selection,onClose}) =>
         {selectedCode.symptoms?.length ? <><h3>Common symptoms</h3><ul>{selectedCode.symptoms.map(item=><li key={item}>{item}</li>)}</ul></>:null}
         <h3>Possible causes</h3><ul>{selectedCode.causes.map(item=><li key={item}>{item}</li>)}</ul>
         <h3>Sensible next checks</h3><ol>{selectedCode.checks.map(item=><li key={item}>{item}</li>)}</ol>
-        {selectedCode.related?.length ? <><h3>Related references</h3><p>{selectedCode.related.join(' · ')}</p></>:null}
+        {selectedCode.related?.length ? <><h3>Related references</h3><div className="related-links">{selectedCode.related.map(item => {
+          const available = TROUBLE_CODES.some(code => code.code === item || code.searchTerms?.includes(item)) || FIELD_GUIDES.some(guide => item.toLowerCase().includes(guide.title.toLowerCase()) || guide.title.toLowerCase().includes(item.toLowerCase().replace(' field guide','')));
+          return available ? <button type="button" key={item} onClick={() => openRelated(item)}>{item} <span aria-hidden="true">↗</span></button> : <span className="related-unavailable" key={item}>{item} <small>not in this library yet</small></span>;
+        })}</div></>:null}
         <p><strong>Review status:</strong> {selectedCode.reviewStatus??'Pending'}.</p>
         <p><strong>Source status:</strong> {selectedCode.sourceStatus??'References pending'}.</p>
         <p>{DRAFT_DISCLAIMER}</p>

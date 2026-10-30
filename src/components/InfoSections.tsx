@@ -44,8 +44,8 @@ export const LearningSection: React.FC = () => {
               </div>
             </div>
           </div>
-          <a className="button button-primary" href="#safety">
-            Review safety basics <span aria-hidden="true">↗</span>
+          <a className="button button-primary" href="#safety-lesson">
+            Try the safety knowledge check <span aria-hidden="true">↗</span>
           </a>
         </div>
 
@@ -74,8 +74,8 @@ export const LearningSection: React.FC = () => {
             <span>MODULE PREVIEW</span>
             <span>CONTENT IN REVIEW</span>
           </div>
-          <a className="text-link" href="#safety">
-            Open safety checklist <span>↗</span>
+          <a className="text-link" href="#safety-lesson">
+            Start the knowledge check <span>↗</span>
           </a>
         </article>
       </div>

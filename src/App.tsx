@@ -12,6 +12,7 @@ import {
   SiteFooter,
 } from './components/InfoSections';
 import { SearchSection } from './components/SearchSection';
+import { SafetyLessonQuiz } from './components/SafetyLessonQuiz';
 import { SymptomsSection } from './components/SymptomsSection';
 import { searchDiagnosticLibrary } from './data/diagnosticsData';
 import { DetailSelection, SearchResultItem } from './types/diagnostics';
@@ -81,6 +82,7 @@ export const App: React.FC = () => {
         <GuidedTriage />
         <GuidesSection onOpenDetail={setActiveDetail} />
         <LearningSection />
+        <SafetyLessonQuiz />
         <SafetySection />
         <AboutSection />
       </main>
@@ -88,6 +90,7 @@ export const App: React.FC = () => {
       <DetailDialog
         selection={activeDetail}
         onClose={() => setActiveDetail(null)}
+        onOpenDetail={setActiveDetail}
       />
     </>
   );

@@ -14,7 +14,7 @@ The current public-facing build includes:
 - Symptom-based troubleshooting cards and a guided intake experience for recording observations and recognizing stop-work warnings.
 - Six structured field guides: battery drain, no-crank/clicking, overheating, rough idle, check-engine-light first steps, and OBD-II scanner use.
 - Detail views with possible causes, ordered next checks, safety warnings, related references, and explicit review/source status.
-- Learning-path preview, safety guidance, and project principles.
+- Learning-path preview plus an interactive 15-question automotive-safety knowledge check drawn from the supplied Rounds 1–3 drafts.
 
 ## Local development
 
@@ -37,9 +37,9 @@ npm run build
 - All supplied automotive content remains draft and requires qualified mechanic review and authoritative references. The review register is in `docs/content-review-register.md`.
 - Vehicle-specific specifications, torque values, wiring details, and procedures are not invented. Values and references absent from the source drafts remain outstanding.
 - A diagnostic trouble code is evidence, not proof that a component has failed. Vehicle-specific service information takes precedence.
-- The safety lesson source currently contains questions 1–15 only. The planned 20-question lesson and 95% pass requirement are not implemented.
+- The safety knowledge check contains the 15 supplied draft questions from Rounds 1–3. Questions 16–20 are absent; the planned 20-question assessment and 19/20 (95%) unlock requirement are not implemented. The current self-check does not unlock content or certify training.
 - Guided Intake organizes observations and identifies stop-work warnings; it does not diagnose a fault.
-- Search and guides use a local curated draft library. There is no live vehicle connection, VIN decoding, external code database, or AI diagnosis.
+- Related code and guide references link to matching entries already present in the local library; unavailable references are labelled as not yet available. Search and guides use a local curated draft library. There is no live vehicle connection, VIN decoding, external code database, or AI diagnosis.
 - The frontend is not connected to Supabase or an external backend. Existing Supabase security findings remain separately tracked; no database remediation is included in this public-experience branch.
 - My Garage, user accounts, saved histories, Parts Finder, community, admin tools, translations, and billing are not implemented.
 - Browser interaction, responsive, accessibility, automotive-content, security, and end-to-end release testing remain for the consolidated testing and remediation phase.
