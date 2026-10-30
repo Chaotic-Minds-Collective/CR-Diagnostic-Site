@@ -60,3 +60,29 @@ Before final identity approval:
 4. Obtain owner approval for the final name, tagline, mascot, helper name, logo, and production artwork.
 
 Searches are preliminary and do not guarantee legal clearance. Obtain qualified legal advice where material uncertainty remains.
+
+## Asset inventory
+
+| Asset | Path | Purpose | Status |
+|---|---|---|---|
+| Diagnostic emblem | public/assets/brand-mark.svg | Shared mark used in the header, learning preview, about panel, and footer | Original concept; provisional |
+| Mechanic character concept | public/assets/brand-mascot-concept.svg | Homepage hero illustration | Original concept; unnamed; not final production art |
+| Hero integration | src/components/HeroSection.tsx | Public-facing character and illustrative diagnostic console | Implemented on this feature branch |
+| Identity styling | src/index.css | Character panel, labels, and visual treatment | Implemented on this feature branch |
+
+The provisional palette remains Obsidian #0B0D12, Steel #18232D, Electric cyan #32E6E6, Warning red #E94B4B, and Muted gold #E2BC58. Warning red should remain semantically meaningful.
+
+## Project decision log — 2026-10-30
+
+**Decision:** Continue building the public-facing educational experience and original identity before beginning one comprehensive testing and remediation phase.
+
+- Continue feature development in isolated GitHub branches.
+- Avoid repeatedly pausing for full test cycles while features are unfinished.
+- Preserve normal development discipline; do not knowingly release broken or unsafe code.
+- Consolidate browser, responsive, accessibility, automotive-content, security, and end-to-end remediation once the public foundation is assembled.
+- The Diagnostic Bay remains the project label, not an approved commercial brand. Burning Oil Garage, Grease Dojo, and other explored names remain concepts.
+- The mascot and helper remain unnamed. The current emblem and character are concept assets, not final approved artwork.
+- All three supplied content rounds remain unverified drafts pending mechanic review and authoritative references.
+- The safety lesson source contains questions 1–15 only; the planned 20-question lesson is not complete.
+- No deployment, domain purchase, paid service, production database change, or production release is authorized by this development work.
+- Existing Supabase security findings remain separately tracked; this branch does not attempt database remediation or introduce a frontend Supabase connection.
