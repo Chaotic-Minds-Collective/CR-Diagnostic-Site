@@ -1,0 +1,115 @@
+.triage-section {
+  background: linear-gradient(180deg, #111820, #0b0d12);
+  border-block: 1px solid #293640;
+}
+.triage-layout {
+  display: grid;
+  grid-template-columns: minmax(230px, 0.72fr) minmax(0, 1.28fr);
+  gap: 1rem;
+  align-items: start;
+}
+.triage-choices {
+  display: grid;
+  gap: 0.65rem;
+}
+.triage-choice {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  min-height: 76px;
+  padding: 0.9rem 1rem;
+  border: 1px solid #34414c;
+  border-radius: 9px;
+  background: #121820;
+  color: #edf1f4;
+  text-align: left;
+}
+.triage-choice span {
+  font-weight: 800;
+}
+.triage-choice small {
+  color: #aab6c1;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.triage-choice:hover,
+.triage-choice.is-active {
+  border-color: #32e6e6;
+  background: #14262b;
+}
+.triage-choice:focus-visible {
+  outline: 3px solid #e2bc58;
+  outline-offset: 3px;
+}
+.triage-detail {
+  padding: 1.4rem;
+  border: 1px solid #3b4854;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #18232d, #10161d);
+}
+.triage-kicker {
+  color: #32e6e6;
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.14em;
+}
+.triage-detail h3 {
+  margin: 0.65rem 0;
+  font-size: 1.45rem;
+}
+.triage-detail h4 {
+  margin: 1.2rem 0 0.45rem;
+  color: #32e6e6;
+  font-size: 0.92rem;
+}
+.triage-detail p,
+.triage-detail li {
+  color: #c0c9d0;
+  font-size: 0.88rem;
+}
+.triage-detail ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.3rem;
+}
+.triage-detail li {
+  margin: 0.4rem 0;
+}
+.triage-stop {
+  margin-top: 1.1rem;
+  padding: 1rem;
+  border: 1px solid #694346;
+  border-radius: 8px;
+  background: #291a1c;
+}
+.triage-stop strong {
+  color: #f0cece;
+}
+.triage-stop ul {
+  margin-top: 0.45rem;
+}
+.triage-stop li {
+  color: #e3c6c6;
+}
+.triage-disclaimer {
+  margin: 1.2rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px solid #34414c;
+  color: #9ba7b1 !important;
+  font-size: 0.76rem !important;
+}
+@media (max-width: 760px) {
+  .triage-layout {
+    grid-template-columns: 1fr;
+  }
+  .triage-choices {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 480px) {
+  .triage-choices {
+    grid-template-columns: 1fr;
+  }
+  .triage-detail {
+    padding: 1rem;
+  }
+}
