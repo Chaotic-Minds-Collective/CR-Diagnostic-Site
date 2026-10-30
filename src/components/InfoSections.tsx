@@ -179,9 +179,14 @@ export const SiteFooter: React.FC = () => {
           A working concept for a clearer, safer way to learn automotive
           diagnostics.
         </p>
-        <a className="back-top" href="#top">
-          Back to top ↑
-        </a>
+        <div className="footer-links">
+          <a className="back-top" href="#reference-desk">
+            Reference desk ↗
+          </a>
+          <a className="back-top" href="#top">
+            Back to top ↑
+          </a>
+        </div>
       </div>
       <div className="footer-bottom">
         <span>
