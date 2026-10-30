@@ -258,3 +258,62 @@
     width: 100%;
   }
 }
+
+
+.case-report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+@media print {
+  @page {
+    margin: 16mm;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  .case-report,
+  .case-report * {
+    visibility: visible !important;
+  }
+
+  .case-report {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: none;
+  }
+
+  .case-report-heading {
+    margin-bottom: 0.5rem;
+  }
+
+  .case-report-heading h3,
+  .case-report-heading .eyebrow {
+    color: #111 !important;
+  }
+
+  .case-report-actions {
+    display: none !important;
+  }
+
+  .case-report-text {
+    width: 100%;
+    min-height: 0;
+    border: 0;
+    background: #fff !important;
+    color: #111 !important;
+    font-size: 10pt;
+    overflow: visible;
+    resize: none;
+  }
+}
