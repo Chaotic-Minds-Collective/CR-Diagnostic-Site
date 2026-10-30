@@ -1,50 +1,79 @@
 # Supabase integration and migration workflow
 
-**Status:** Workflow proposal; live database access must be restored before baseline capture or frontend connection. No database changes are authorized by this document.
+**Status:** Live project access restored; current database audit is read-only. No production database changes or frontend integration are authorized by this document.
 
-## Current architecture and blocker
+## Current architecture
 
-The current public site is a static HTML/CSS/JavaScript prototype. The searchable code library and field guides live in `app.js`; the browser does not currently initialize a Supabase client or call Supabase APIs. The existing tables describe account-specific data (profiles, garages, diagnostic cases, reminders, repair records), not the public educational content library. Do not repurpose those user-data tables as public content tables.
+The public website is a React 19 / TypeScript / Vite application. Its educational diagnostic library is bundled locally in `src/data/diagnosticsData.ts`. The browser does not initialize a Supabase client or call Supabase APIs. Public search and educational guides do not require a database.
 
-The last-known Supabase project was named **Greasy Dojo Site** with project ref `rwehmmvjahpfeugfaxis`. As of this audit, that project is not visible in the currently connected Supabase accounts. The connected accounts list different projects. Project details, schema, policies, API URL, and publishable key could therefore not be re-verified. Do not substitute another project based on its name.
+The existing Supabase tables describe account-specific data (profiles, garages, diagnostic cases, maintenance reminders, and repair records). Do not repurpose these private user-data tables as the public diagnostic content library.
 
-## Safe sequence to establish migration history
+## Confirmed project
 
-1. Restore access to the intended Supabase project and confirm its project ref and organization.
-2. Capture a read-only inventory: all schemas/tables/views, columns and types, primary/foreign keys, checks, indexes, grants, RLS enablement and policies, functions/triggers, storage buckets/policies, Auth settings, extensions, database advisors, and current migration history.
-3. Take/verify a recoverable backup before any schema changes.
-4. Pull the existing live schema into a local baseline using the Supabase CLI (for example, `supabase link --project-ref <confirmed-ref>` followed by `supabase db pull`). Review the generated baseline against the live schema; do not assume that an empty migration-history list means the database has no existing schema.
-5. Commit the reviewed baseline to `supabase/migrations/` on a feature branch. Treat it as a representation of existing state, not a migration to replay blindly against the already-provisioned production database.
-6. Verify the local migration history and schema diff against the live project. Do not run `db push`, apply DDL, reset, or repair migration history until the baseline is reconciled and a recovery plan is approved.
-7. For each future schema change, create a timestamped migration file (Supabase CLI convention), include only the intended change, and review its effect on data, grants, RLS, indexes, and compatibility.
-8. Test on a local database or an explicitly approved non-production environment. No paid Supabase branch should be created without checking cost and receiving approval.
-9. Open a pull request. Require a description of the schema impact, RLS/access impact, backfill/data-loss risk, rollback/recovery plan, and test evidence.
-10. Merge and deploy only after owner approval. Keep production deployment separate from ordinary GitHub merges.
+- Project: **Greasy Dojo Site**
+- Project ref: `rwehmmvjahpfeugfaxis`
+- Organization: `wwronlwuwytwbioagyke`
+- Region: `us-east-1`
+- PostgreSQL engine: 17
+- Status: `ACTIVE_HEALTHY`
 
-## GitHub change-control rules
+Read-only inventory found five public tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, and `repair_records`. All five reported zero rows during inspection, all have RLS enabled, and none has FORCE RLS enabled. The migration list is empty. No views, functions, or triggers were found in `public`. Storage has no buckets or policies in the inspected project.
 
-- `main` is the stable source of truth. Work on named feature/audit branches.
-- Use one focused pull request per coherent change; never commit straight to `main` for ordinary development.
-- PRs must identify affected files/systems, tests, risk, rollback, database migration impact, and outstanding approvals.
-- Do not enable automatic production deployment or Supabase automatic branching as a shortcut. The existing Pages workflow is manual-only and guarded to run from `main`; keep it that way until release is approved.
-- Record important architecture and brand decisions in documentation. Update the audit/changelog when a finding is fixed or its status changes.
-- Never commit service-role/secret keys, credentials, user data, or database dumps containing personal data. Browser code may use only a Supabase publishable key after RLS and grants are verified.
+An empty migration list does not mean the database has no schema. The existing schema must be baselined from the live project, not recreated from assumptions.
 
-## Frontend integration boundary
+## Verified security findings — do not connect the frontend yet
 
-Connect Supabase only for a defined feature. Before adding sign-in, a garage, or saved diagnostic cases, define:
-- which feature is in scope and which data is necessary;
-- guest versus authenticated behavior and user-facing empty/error states;
-- ownership and sharing rules;
-- retention, export, and deletion expectations;
-- RLS policies and grants for every table and operation;
-- whether any server-side function is truly needed.
+1. **Profiles:** a public SELECT policy uses `true` on a table containing email and role fields; `anon` has SELECT privilege. Public callers may be able to read private profile fields.
+2. **Role assignment:** authenticated users have UPDATE privilege on their own profile, including the `role` column. The current owner-row policy does not restrict writable columns, while the role constraint permits `admin`. This creates a high-priority role self-escalation risk.
+3. **Shared cases:** a public SELECT policy exposes all columns of rows where `is_shared = true`. The table contains owner IDs, vehicle references, and notes; no column projection or redaction is present. The table definition has no VIN column.
+4. **Grants:** `anon` and `authenticated` have SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, and TRIGGER privileges on all five public tables. RLS still applies to row-level DML, but does not protect operations such as TRUNCATE.
+5. **Default privileges:** default ACLs grant broad table, sequence, and function privileges to API roles for future public objects. This must be corrected before future objects are created.
+6. **Vehicle ownership:** current row ownership checks do not by themselves prove that a linked `vehicle_id` belongs to the same user as the diagnostic case, reminder, or repair record.
+7. **Performance:** the advisor reported seven unindexed foreign keys, eight RLS initialization-plan warnings, and five multiple-permissive-policy warnings.
 
-The public educational search can remain static initially. It does not require a database merely to be useful. If the product later needs centrally maintained public codes/guides, design a separate public-content schema with source citations and review status instead of exposing account tables.
+The security advisor returned no lints, but this does not negate the manual authorization findings above. No exploit was executed and no synthetic-user access tests have yet been run.
 
-## Current blockers
+## Safe migration and remediation sequence
 
-- The last-known project is not visible through the current Supabase connector authorization.
-- The live schema and RLS expressions cannot currently be rechecked.
-- Migration history was previously reported empty; that needs confirmation after access is restored.
-- Do not create a fake baseline or claim the frontend is connected until a real connection and policy tests pass.
+### Phase 1 — Complete the baseline
+1. Capture all schemas, tables, views, columns/types/defaults, constraints, foreign keys, indexes, triggers, functions, policies, grants, default privileges, role memberships, extensions, storage buckets/policies, Auth settings, and migration history.
+2. Confirm all authorized clients and integrations. The database may have consumers not represented in this website repository.
+3. Verify backup/PITR availability and document a recovery procedure.
+4. Reconcile the live schema with Git history. Do not infer a baseline from the table names or an empty migration list.
+
+### Phase 2 — Design the authorization model
+1. Define the first approved user-facing feature and the minimum data it needs.
+2. Keep guest access to private account/vehicle-history tables disabled by default.
+3. Restrict authenticated users to their own records, including linked vehicle ownership on INSERT and UPDATE.
+4. Prevent users from changing their own role or other authorization metadata. Use a separately controlled role-assignment process.
+5. Remove public access to private profile fields. If public sharing is later required, use a separate allowlisted representation and explicit consent/moderation.
+6. Review table, column, sequence, function, schema, and default privileges for every role.
+7. Keep privileged server credentials out of browser code; only a publishable key may be considered after policy/grant tests pass.
+
+### Phase 3 — Synthetic security tests
+Use only synthetic users and records in a safe non-production environment:
+
+- Anonymous callers cannot read private profiles, garages, reminders, or repair records.
+- User A cannot read, update, delete, or link User B's records/vehicles.
+- User A cannot change their role, including to `admin`.
+- Shared public cases expose only explicitly allowlisted fields.
+- API roles cannot perform unneeded destructive or administrative operations.
+- Expired/invalid sessions and unauthorized requests fail closed.
+- Empty, denied, and error states are handled safely by the frontend.
+
+Do not create a paid Supabase branch without checking cost and receiving approval. Do not use production data for negative tests.
+
+### Phase 4 — Migration baseline and future changes
+1. Use the current Supabase CLI documentation and project access to pull the actual existing schema into a local baseline.
+2. Review the generated baseline against the live schema, object owners, policies, grants, and extensions.
+3. Commit the reviewed baseline to `supabase/migrations/` on a feature branch as a representation of existing state, not as a migration to replay blindly against the provisioned project.
+4. Verify migration history and schema diff. Do not run `db push`, reset, destructive DDL, or migration-history repair until separately reviewed and approved.
+5. For future schema changes, create migration files using the supported Supabase CLI workflow, include only the intended change, and document data impact, grants/RLS, compatibility, tests, and recovery.
+
+## GitHub and release controls
+
+- Keep `main` as the stable source of truth; use focused feature branches and pull requests.
+- Do not commit credentials, user data, database dumps containing personal information, or secret keys.
+- Do not connect the frontend until the authorization model and tests pass.
+- Do not enable automatic database branching or production database deployment as a shortcut.
+- No production DDL, permission changes, database reset, paid resources, or deployment is authorized by this document.
