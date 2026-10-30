@@ -61,7 +61,19 @@ export const CaseWorksheet: React.FC = () => {
   const [reportText, setReportText] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
 
-  const updateField = (field: keyof CaseDetails, value: string) => {
+  const updateField = (
+    field:
+      | 'year'
+      | 'make'
+      | 'model'
+      | 'engine'
+      | 'mileage'
+      | 'concern'
+      | 'troubleCodes'
+      | 'recentWork'
+      | 'observations',
+    value: string
+  ) => {
     setDetails((current) => ({ ...current, [field]: value }));
     setReportText('');
     setCopyStatus('');
