@@ -18,6 +18,14 @@ The public educational resource currently includes:
 - Learning Paths preview, non-negotiable safety rules, and Rules of the Bay
 - Accessible detail dialog with keyboard focus indicators and reduced-motion support
 
+## Project documentation
+
+- [Project roadmap](docs/project-roadmap.md)
+- [Decision log](docs/decision-log.md)
+- [Asset inventory](docs/asset-inventory.md)
+- [Changelog](docs/changelog.md)
+- [Diagnostic content review register](docs/content-review-register.md)
+
 ## Local Development
 
 Install dependencies and start the Vite development server on port 3000:
