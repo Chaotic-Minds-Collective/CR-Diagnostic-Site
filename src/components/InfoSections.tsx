@@ -56,7 +56,7 @@ export const LearningSection: React.FC = () => {
           </div>
           <div className="learning-seal">
             <img
-              src="/assets/brand-mark.svg"
+              src={`${import.meta.env.BASE_URL}assets/brand-mark.svg`}
               alt=""
               width={88}
               height={88}
@@ -123,7 +123,7 @@ export const AboutSection: React.FC = () => {
       <div className="about-card">
         <div className="about-icon">
           <img
-            src="/assets/brand-mark.svg"
+            src={`${import.meta.env.BASE_URL}assets/brand-mark.svg`}
             alt=""
             width={64}
             height={64}
@@ -163,7 +163,7 @@ export const SiteFooter: React.FC = () => {
       <div className="footer-main">
         <a className="brand" href="#top">
           <img
-            src="/assets/brand-mark.svg"
+            src={`${import.meta.env.BASE_URL}assets/brand-mark.svg`}
             alt=""
             width={42}
             height={42}
