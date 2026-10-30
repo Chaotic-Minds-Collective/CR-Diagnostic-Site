@@ -76,7 +76,7 @@ export const ReferenceDesk: React.FC = () => {
               <span className="reference-category">{resource.category}</span>
               <h3>{resource.title}</h3>
               <p>{resource.description}</p>
-              <a href={resource.link} target="_blank" rel="noreferrer">
+              <a href={resource.link} target="_blank" rel="noopener noreferrer">
                 {resource.linkLabel} <span aria-hidden="true">↗</span>
               </a>
               <small>{resource.note}</small>
