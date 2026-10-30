@@ -367,7 +367,7 @@ export const CaseWorksheet: React.FC = () => {
                 className="case-report-text"
                 aria-label="Prepared diagnostic case notes"
                 readOnly
-                rows={16}
+                rows={Math.max(16, reportText.split("\n").length + 2)}
                 value={reportText}
                 onFocus={(event) => event.currentTarget.select()}
               />
