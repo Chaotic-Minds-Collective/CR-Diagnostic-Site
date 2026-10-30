@@ -29,7 +29,7 @@ GitHub recorded a separate **`pages build and deployment`** run:
 - Conclusion: `success`
 - Run time: 2026-10-30 UTC
 
-This was not the custom `workflow_dispatch` workflow described above. The available repository read access does not establish which Pages source setting produced the dynamic run or confirm the currently served URL/content. A successful Pages build/deployment run means the repository must be treated as potentially published until the owner verifies GitHub Settings → Pages and the live site.
+This was not the custom `workflow_dispatch` workflow described above. Its recorded job steps were **Build with Jekyll**, **Upload artifact**, and **Deploy to GitHub Pages**. The custom Vite workflow builds `dist/`; the observed Jekyll run did not use that artifact. This strongly indicates that the separate Pages publication path is still building from repository source rather than using the Vite production output. Because the Vite root `index.html` references `/src/main.tsx`, publishing the source tree without a Vite build may result in a broken or incomplete site. The exact Pages source setting and currently served URL/content are not exposed by the available read access. Treat the repository as potentially published and the served site as unverified until the owner checks GitHub Settings → Pages and tests the live site.
 
 **Do not trigger another deployment or change Pages settings as part of this remediation.** Verify the current publication state with the owner. A successful deployment event is not evidence of owner launch approval.
 
@@ -43,8 +43,8 @@ This was not the custom `workflow_dispatch` workflow described above. The availa
 
 ## Before public launch
 
-- [ ] Verify the current Pages source setting and whether the site is publicly served; do not change settings without approval.
-- [ ] Review the currently served URL and confirm the artifact/content matches the approved release.
+- [ ] Verify the current Pages source setting and whether the site is publicly served; the observed dynamic run used Jekyll, not the Vite `dist/` artifact. Do not change settings without approval.
+- [ ] Review the currently served URL and confirm the artifact/content matches the approved release; if Pages is branch/Jekyll sourced, it must not be treated as a valid Vite build.
 - [ ] Generate and commit a real npm lockfile on a feature branch; move CI to `npm ci` only after it exists and passes.
 - [ ] Run the built application and test mobile navigation, search, category filters, symptom cards, Guided Intake, and guide details.
 - [ ] Review keyboard navigation, focus visibility, screen-reader announcements, and narrow mobile viewports.
