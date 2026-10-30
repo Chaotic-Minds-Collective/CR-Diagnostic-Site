@@ -60,11 +60,14 @@ export const Header: React.FC = () => {
           <a href="#diagnostic-lab" onClick={handleLinkClick}>
             Diagnostic Lab
           </a>
-          <a href="#guides" onClick={handleLinkClick}>
-            Fix Database
-          </a>
           <a href="#symptoms" onClick={handleLinkClick}>
             Symptoms
+          </a>
+          <a href="#guided-triage" onClick={handleLinkClick}>
+            Guided Intake
+          </a>
+          <a href="#guides" onClick={handleLinkClick}>
+            Fix Database
           </a>
           <a href="#learning" onClick={handleLinkClick}>
             Learning
