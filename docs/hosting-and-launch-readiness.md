@@ -29,9 +29,9 @@ GitHub recorded a separate **`pages build and deployment`** run:
 - Conclusion: `success`
 - Run time: 2026-10-30 UTC
 
-This was not the custom `workflow_dispatch` workflow described above. Both observed dynamic runs recorded **Build with Jekyll**, **Upload artifact**, and **Deploy to GitHub Pages**. The repeat run after the lockfile PR merged confirms that this branch/Jekyll publication path remains active. The custom Vite workflow builds `dist/`; the observed Jekyll run did not use that artifact. This strongly indicates that the separate Pages publication path is still building from repository source rather than using the Vite production output. Because the Vite root `index.html` references `/src/main.tsx`, publishing the source tree without a Vite build may result in a broken or incomplete site. The exact Pages source setting and currently served URL/content are not exposed by the available read access. Treat the repository as potentially published and the served site as unverified until the owner checks GitHub Settings → Pages and tests the live site.
+This was not the custom `workflow_dispatch` workflow described above. Both observed dynamic runs recorded **Build with Jekyll**, **Upload artifact**, and **Deploy to GitHub Pages**. The repeat run after the lockfile PR merged confirms that this branch/Jekyll publication path remains active. The custom Vite workflow builds `dist/`; the observed Jekyll run did not use that artifact. This strongly indicates that the separate Pages publication path is still building from repository source rather than using the Vite production output. Because the Vite root `index.html` references `/src/main.tsx`, publishing the source tree without a Vite build may result in a broken or incomplete site. The exact Pages source setting and currently served URL/content are not exposed by the available read access. On 2026-10-30, the repository owner confirmed in the project conversation that the Pages source was switched to GitHub Actions. This is an owner-reported setting change; the connected read-only GitHub API cannot independently inspect the setting. The served URL and artifact remain unverified until the Vite workflow is run under release approval and the resulting site is tested.
 
-**Do not trigger another deployment or change Pages settings as part of this remediation.** Verify the current publication state with the owner. A successful deployment event is not evidence of owner launch approval.
+**The Pages source switch is owner-reported complete.** Do not trigger another deployment as part of this documentation remediation. A successful deployment event or a changed source setting is not evidence of owner launch approval.
 
 ## Quality and verification status
 
@@ -39,13 +39,14 @@ This was not the custom `workflow_dispatch` workflow described above. Both obser
 - The custom Pages workflow builds `dist/` and deploys it through GitHub Actions, but remains manual-only and has not been run.
 - A real npm lockfile is committed; CI and the manual Pages workflow use `npm ci`.
 - Automated component/interaction tests and full browser/accessibility testing remain outstanding.
-- The GitHub Pages live URL, Pages source configuration, mobile behavior, screen-reader behavior, and runtime content have not been independently verified.
+- The owner reports the Pages source is now GitHub Actions; the setting has not been independently verified through the available API.
+- The GitHub Pages live URL, Vite deployment artifact, mobile behavior, screen-reader behavior, and runtime content have not been independently verified.
 
 ## Before public launch
 
-- [ ] Change GitHub Settings → Pages → Build and deployment → Source to **GitHub Actions** (owner action; the available connector cannot change this production setting).
+- [x] Owner confirmed the GitHub Settings → Pages → Build and deployment → Source was switched to **GitHub Actions** on 2026-10-30 (owner-reported; not independently visible through the connected API).
 - [ ] Verify the currently served URL and confirm the artifact/content matches the approved release; branch/Jekyll output must not be treated as a valid Vite build.
-- [ ] After the source is switched and launch is approved, manually run the Vite Pages workflow from `main` and verify the deployed artifact.
+- [ ] After release checks pass and the owner explicitly approves release, manually run the Vite Pages workflow from `main` and verify the deployed artifact and live URL.
 - [ ] Run the built application and test mobile navigation, search, category filters, symptom cards, Guided Intake, and guide details.
 - [ ] Review keyboard navigation, focus visibility, screen-reader announcements, and narrow mobile viewports.
 - [ ] Have a qualified mechanic review diagnostic content and add authoritative, vehicle-appropriate references.
