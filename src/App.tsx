@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { DetailDialog } from './components/DetailDialog';
 import { DiagnosticLab } from './components/DiagnosticLab';
+import { GuidedTriage } from './components/GuidedTriage';
 import { GuidesSection } from './components/GuidesSection';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -77,6 +78,7 @@ export const App: React.FC = () => {
         />
         <DiagnosticLab onOpenDetail={setActiveDetail} />
         <SymptomsSection onSelectSymptom={handleSelectSymptom} />
+        <GuidedTriage />
         <GuidesSection onOpenDetail={setActiveDetail} />
         <LearningSection />
         <SafetySection />
