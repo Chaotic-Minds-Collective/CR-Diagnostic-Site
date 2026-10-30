@@ -42,7 +42,13 @@ The supplied drafts request mechanic review for sensible test order, complete ha
 
 The supplied safety quiz currently contains questions 1–15 across Rounds 1–3. An interactive self-check preview uses only these 15 supplied questions and their supplied answer rationales. Round 4 questions 16–20 have not been supplied. The preview does not enforce a pass threshold, unlock Lesson 2, or certify training. Do not represent the planned 20-question lesson or its stated 19/20 (95%) pass requirement as implemented until the remaining questions, answer rationale, mechanic review, and lesson flow are complete.
 
-## Implemented educational experience\n\n- Safety knowledge-check preview: 15 questions from the supplied drafts, with answer feedback and source rationales.\n- Status remains draft and mechanic review pending; no course-completion claim is made.\n- Related code and guide references link only when the target exists in the current library. Missing references are labelled as unavailable rather than fabricated.\n\n## Required review fields
+## Implemented educational experience
+
+- Safety knowledge-check preview: 15 questions from the supplied drafts, with answer feedback and source rationales.
+- Status remains draft and mechanic review pending; no course-completion claim is made.
+- Related code and guide references link only when the target exists in the current library. Missing references are labelled as unavailable rather than fabricated.
+
+## Required review fields
 
 For every code page and guide, record reviewer name and review date; Approved / Change needed / Remove decision; correct test order and required skill level; applicable warnings; vehicle-specific specifications and procedures; authoritative references; final approved English copy; and Spanish reviewer/translation status.
 
