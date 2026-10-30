@@ -142,6 +142,10 @@ export const CaseWorksheet: React.FC = () => {
     }
   };
 
+  const printReport = () => {
+    if (reportText) window.print();
+  };
+
   const resetWorksheet = () => {
     setDetails(EMPTY_CASE);
     setReportText('');
@@ -350,9 +354,14 @@ export const CaseWorksheet: React.FC = () => {
                   <span className="eyebrow">READY TO SHARE</span>
                   <h3>Diagnostic case notes</h3>
                 </div>
-                <button className="button button-primary" type="button" onClick={copyReport}>
-                  Copy report
-                </button>
+                <div className="case-report-actions">
+                  <button className="button button-primary" type="button" onClick={copyReport}>
+                    Copy report
+                  </button>
+                  <button className="button button-ghost" type="button" onClick={printReport}>
+                    Print / save PDF
+                  </button>
+                </div>
               </div>
               <textarea
                 className="case-report-text"
