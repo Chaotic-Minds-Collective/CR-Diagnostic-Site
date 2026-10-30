@@ -1602,3 +1602,11 @@ h3 {
     transition-duration: 0.01ms !important;
   }
 }
+
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
