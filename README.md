@@ -16,6 +16,7 @@ The public educational resource currently includes:
 - **Diagnostic Case Worksheet** for recording vehicle context, operating conditions, warning signs, codes, recent work, and observations, then preparing a shareable text report
 - Six interactive Fix Database field guides
 - Reference Desk linking to official vehicle-manufacturer service-information directories, NHTSA recall resources, EPA repair-information guidance, and ASE Blue Seal repair-center resources
+- Site notices covering educational limitations, safety boundaries, current data handling, and third-party links (draft; legal review required)
 - Learning Paths preview, non-negotiable safety rules, and Rules of the Bay
 - Accessible detail dialog with keyboard focus indicators and reduced-motion support
 
@@ -27,6 +28,7 @@ The public educational resource currently includes:
 - [Changelog](docs/changelog.md)
 - [Diagnostic content review register](docs/content-review-register.md)
 - [Reference Desk source register](docs/reference-sources.md)
+- [Legal review checklist](docs/legal-review-checklist.md)
 
 ## Local Development
 
