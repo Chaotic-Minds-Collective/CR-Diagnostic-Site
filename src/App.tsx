@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { CaseWorksheet } from './components/CaseWorksheet';
 import { DetailDialog } from './components/DetailDialog';
 import { DiagnosticLab } from './components/DiagnosticLab';
 import { GuidedTriage } from './components/GuidedTriage';
@@ -79,6 +80,7 @@ export const App: React.FC = () => {
         <DiagnosticLab onOpenDetail={setActiveDetail} />
         <SymptomsSection onSelectSymptom={handleSelectSymptom} />
         <GuidedTriage />
+        <CaseWorksheet />
         <GuidesSection onOpenDetail={setActiveDetail} />
         <LearningSection />
         <SafetySection />
