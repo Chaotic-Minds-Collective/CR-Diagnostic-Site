@@ -175,9 +175,9 @@ export const CaseWorksheet: React.FC = () => {
         <div className="case-privacy-note">
           <span aria-hidden="true">i</span>
           <p>
-            <strong>Private by design:</strong> this worksheet does not create
-            an account, save a history, or send information to a server. Your
-            entries remain in this page until you clear or leave it.
+            <strong>Local-only worksheet:</strong> this version does not create an
+            account, save a history, or send entries to a server. Your
+            information remains in this page until you clear it or leave.
           </p>
         </div>
 
