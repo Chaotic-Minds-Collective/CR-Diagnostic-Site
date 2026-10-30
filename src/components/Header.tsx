@@ -27,7 +27,7 @@ export const Header: React.FC = () => {
           onClick={handleLinkClick}
         >
           <img
-            src="/assets/brand-mark.svg"
+            src={`${import.meta.env.BASE_URL}assets/brand-mark.svg`}
             alt=""
             width={46}
             height={46}
