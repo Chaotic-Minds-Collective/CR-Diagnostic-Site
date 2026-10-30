@@ -183,6 +183,9 @@ export const SiteFooter: React.FC = () => {
           <a className="back-top" href="#reference-desk">
             Reference desk ↗
           </a>
+          <a className="back-top" href="#site-notices">
+            Site notices ↗
+          </a>
           <a className="back-top" href="#top">
             Back to top ↑
           </a>
