@@ -15,6 +15,7 @@ The public educational resource currently includes:
 - Guided Intake experience for organizing symptom observations, identifying stop-work warning signs, and choosing safe next steps
 - **Diagnostic Case Worksheet** for recording vehicle context, operating conditions, warning signs, codes, recent work, and observations, then preparing a shareable text report
 - Six interactive Fix Database field guides
+- Reference Desk linking to official vehicle-manufacturer service-information directories, NHTSA recall resources, EPA repair-information guidance, and ASE Blue Seal repair-center resources
 - Learning Paths preview, non-negotiable safety rules, and Rules of the Bay
 - Accessible detail dialog with keyboard focus indicators and reduced-motion support
 
