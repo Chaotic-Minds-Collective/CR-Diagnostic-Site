@@ -17,7 +17,7 @@ The existing Supabase tables describe account-specific data (profiles, garages, 
 - PostgreSQL engine: 17
 - Status: `ACTIVE_HEALTHY`
 
-Read-only inventory found five public tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, and `repair_records`. All five reported zero rows during inspection, all have RLS enabled, and none has FORCE RLS enabled. The migration list is empty. No views, functions, or triggers were found in `public`. Storage has no buckets or policies in the inspected project.
+Read-only inventory found five public tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, and `repair_records`. All five reported zero rows during inspection, all have RLS enabled, and none has FORCE RLS enabled. The migration list is empty. All five application tables are owned by `postgres`; their ACLs grant all table privileges to `anon`, `authenticated`, and `service_role`. No public-schema views, functions, triggers, or sequences were found. No trigger was found on `auth.users` to provision profile rows. Storage has no buckets or policies in the inspected project. Installed extensions are `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, and `uuid-ossp`.
 
 An empty migration list does not mean the database has no schema. The existing schema must be baselined from the live project, not recreated from assumptions.
 
@@ -27,9 +27,10 @@ An empty migration list does not mean the database has no schema. The existing s
 2. **Role assignment:** authenticated users have UPDATE privilege on their own profile, including the `role` column. The current owner-row policy does not restrict writable columns, while the role constraint permits `admin`. This creates a high-priority role self-escalation risk.
 3. **Shared cases:** a public SELECT policy exposes all columns of rows where `is_shared = true`. The table contains owner IDs, vehicle references, and notes; no column projection or redaction is present. The table definition has no VIN column.
 4. **Grants:** `anon` and `authenticated` have SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, and TRIGGER privileges on all five public tables. RLS still applies to row-level DML, but does not protect operations such as TRUNCATE.
-5. **Default privileges:** default ACLs grant broad table, sequence, and function privileges to API roles for future public objects. This must be corrected before future objects are created.
+5. **Default privileges:** default ACLs under both `postgres` and `supabase_admin` grant broad table, sequence, and function privileges to API roles for future public objects. This must be corrected before future objects are created.
 6. **Vehicle ownership:** current row ownership checks do not by themselves prove that a linked `vehicle_id` belongs to the same user as the diagnostic case, reminder, or repair record.
-7. **Performance:** the advisor reported seven unindexed foreign keys, eight RLS initialization-plan warnings, and five multiple-permissive-policy warnings.
+7. **Delete behavior and profile provisioning:** profile deletion cascades to dependent vehicle/history rows; garage deletion sets diagnostic-case vehicle references to NULL but cascades reminders and repair records. No Auth-user trigger was found to create profile rows, so signup/profile provisioning is undefined.
+8. **Performance:** the advisor reported seven unindexed foreign keys, eight RLS initialization-plan warnings, and five multiple-permissive-policy warnings.
 
 The security advisor returned no lints, but this does not negate the manual authorization findings above. No exploit was executed and no synthetic-user access tests have yet been run.
 
