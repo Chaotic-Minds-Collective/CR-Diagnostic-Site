@@ -19,7 +19,7 @@ The existing Supabase tables describe account-specific data (profiles, garages, 
 
 Read-only inventory found five public tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, and `repair_records`. All five reported zero rows during inspection, all have RLS enabled, and none has FORCE RLS enabled. The migration list is empty. All five application tables are owned by `postgres`; their ACLs grant all table privileges to `anon`, `authenticated`, and `service_role`. No public-schema views, functions, triggers, or sequences were found. No trigger was found on `auth.users` to provision profile rows. Storage has no buckets or policies in the inspected project. Installed extensions are `pg_stat_statements`, `pgcrypto`, `plpgsql`, `supabase_vault`, and `uuid-ossp`.
 
-An empty migration list does not mean the database has no schema. The existing schema must be baselined from the live project, not recreated from assumptions.
+An empty migration list does not mean the database has no schema. The existing schema must be baselined from the live project, not recreated from assumptions. The live verbose table inventory, policy expressions, grants, default ACLs, and advisor results were rechecked on 2026-10-30 UTC.
 
 ## Verified security findings — do not connect the frontend yet
 
@@ -27,12 +27,12 @@ An empty migration list does not mean the database has no schema. The existing s
 2. **Role assignment:** authenticated users have UPDATE privilege on their own profile, including the `role` column. The current owner-row policy does not restrict writable columns, while the role constraint permits `admin`. This creates a high-priority role self-escalation risk.
 3. **Shared cases:** a public SELECT policy exposes all columns of rows where `is_shared = true`. The table contains owner IDs, vehicle references, and notes; no column projection or redaction is present. The table definition has no VIN column.
 4. **Grants:** `anon` and `authenticated` have SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, and TRIGGER privileges on all five public tables. RLS still applies to row-level DML, but does not protect operations such as TRUNCATE.
-5. **Default privileges:** default ACLs under both `postgres` and `supabase_admin` grant broad table, sequence, and function privileges to API roles for future public objects. This must be corrected before future objects are created.
+5. **Default privileges:** live catalog inspection at 2026-10-30 16:34 UTC still shows broad defaults under both `postgres` and `supabase_admin` for future public tables, sequences, and functions. Supabase's [October 30 Data API exposure change](https://supabase.com/changelog/45329-breaking-change-tables-not-exposed-to-data-and-graphql-api-automatically) removes default grants for future objects while preserving existing grants on existing tables. The live catalog still reports broad defaults for this project, so verify the rollout state and owner-specific ACLs rather than assuming the platform change fixed it. Existing five-table grants remain a separate remediation item.
 6. **Vehicle ownership:** current row ownership checks do not by themselves prove that a linked `vehicle_id` belongs to the same user as the diagnostic case, reminder, or repair record.
 7. **Delete behavior and profile provisioning:** profile deletion cascades to dependent vehicle/history rows; garage deletion sets diagnostic-case vehicle references to NULL but cascades reminders and repair records. No Auth-user trigger was found to create profile rows, so signup/profile provisioning is undefined.
 8. **Performance:** the advisor reported seven unindexed foreign keys, eight RLS initialization-plan warnings, and five multiple-permissive-policy warnings.
 
-The security advisor returned no lints, but this does not negate the manual authorization findings above. No exploit was executed and no synthetic-user access tests have yet been run.
+The security advisor returned no lints, but this does not negate the manual authorization findings above. The performance advisor still reports 7 unindexed foreign keys, 8 RLS initialization-plan warnings, and 5 multiple-permissive-policy warnings. No exploit was executed and no synthetic-user access tests have yet been run.
 
 ## Safe migration and remediation sequence
 
@@ -48,7 +48,7 @@ The security advisor returned no lints, but this does not negate the manual auth
 3. Restrict authenticated users to their own records, including linked vehicle ownership on INSERT and UPDATE.
 4. Prevent users from changing their own role or other authorization metadata. Use a separately controlled role-assignment process.
 5. Remove public access to private profile fields. If public sharing is later required, use a separate allowlisted representation and explicit consent/moderation.
-6. Review table, column, sequence, function, schema, and default privileges for every role.
+6. Review table, column, sequence, function, schema, and default privileges for every role. Supabase's October 30 rollout means new public tables/functions must not be assumed reachable by API roles; migrations must include only explicit role-specific grants actually required by the feature, alongside RLS and policies.
 7. Keep privileged server credentials out of browser code; only a publishable key may be considered after policy/grant tests pass.
 
 ### Phase 3 — Synthetic security tests
@@ -62,7 +62,7 @@ Use only synthetic users and records in a safe non-production environment:
 - Expired/invalid sessions and unauthorized requests fail closed.
 - Empty, denied, and error states are handled safely by the frontend.
 
-Do not create a paid Supabase branch without checking cost and receiving approval. Do not use production data for negative tests.
+Do not create a paid Supabase branch without checking cost and receiving approval. Do not use production data for negative tests. The current Supabase branch inventory contains only the default `main` branch; no isolated non-production branch is available.
 
 ### Phase 4 — Migration baseline and future changes
 1. Use the current Supabase CLI documentation and project access to pull the actual existing schema into a local baseline.
