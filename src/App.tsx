@@ -90,6 +90,7 @@ export const App: React.FC = () => {
       <DetailDialog
         selection={activeDetail}
         onClose={() => setActiveDetail(null)}
+        onOpenDetail={setActiveDetail}
       />
     </>
   );
