@@ -1,87 +1,122 @@
 # Diagnostic Bay Remediation Plan
 
-Status: Proposed for review. No production database changes, deployment, or application-code changes are authorized by this document.
+**Status:** Updated implementation plan based on a live, read-only audit. No production database changes, Pages settings changes, frontend Supabase integration, or deployment are authorized by this document.
 
 ## Goals and constraints
 
 - Preserve the $0 budget; do not add paid services or resources.
 - Keep the React 19 / TypeScript / Vite application as the current frontend architecture.
-- Keep production deployment disabled until separately reviewed and approved.
-- Do not connect the frontend to Supabase as part of this remediation.
+- Keep production database and release changes separately gated.
+- Do not connect the frontend to Supabase until access controls are corrected and tested.
 - Make changes in small, reviewable steps and retain historical audit findings.
+- Do not treat a successful GitHub Pages event as owner approval to launch.
 
-## Verified baseline (read-only inspection)
+## Verified current baseline
 
-The current repository is `Chaotic-Minds-Collective/CR-Diagnostic-Site`, default branch `main`. The root `package.json` defines:
+### Repository and CI
+
+Repository: `Chaotic-Minds-Collective/CR-Diagnostic-Site`; default branch: `main`.
+
+The root `package.json` defines:
 - `npm run lint`: `tsc --noEmit`
 - `npm run build`: `tsc -b && vite build`
 - React 19, TypeScript 5.7, and Vite 6.
 
-The root has no committed npm lockfile. The existing quality workflow checks the legacy static `app.js`, and the manual deployment workflow packages legacy static assets rather than the Vite `dist/` output. These workflow files need a reviewed update, but deployment must not be run.
+The repository does not contain a committed `package-lock.json`. The current quality workflow uses `npm install`, TypeScript validation, and Vite build. The latest observed main-branch quality run for commit `0872893a815638f341e4bf798222a1c50603122d` completed successfully. The lockfile/reproducible-install task remains open.
 
-A read-only Supabase inspection of project `rwehmmvjahpfeugfaxis` found five application tables: `profiles`, `garages`, `diagnostic_cases`, `maintenance_reminders`, and `repair_records`. The inspection reported broad `anon` and `authenticated` table grants, including destructive/administrative privileges, plus a public profile SELECT policy and a shared-case SELECT policy. It reported no migration records, no triggers in `public`, no routines in `public`, and one index per table. An earlier audit noted seven unindexed foreign keys. These findings require validation against the complete effective privilege model and all authorized clients before changing access.
+The manual Pages workflow has been updated to build the Vite app and publish `dist/`. It remains configured for manual dispatch and a `main` guard. Separately, GitHub recorded a successful `pages build and deployment` event (`dynamic`) for the same main commit, run ID `41008189696`. The Pages source setting and live URL have not been verified. Treat the site as potentially published and do not trigger another deployment or alter Pages settings without explicit approval.
 
-The live row counts reported zero during the inspection. This is not proof that the database is disposable or unused by other clients.
+### Supabase live inventory
 
-## Phase A — Database security
+Project **Greasy Dojo Site**, ref `rwehmmvjahpfeugfaxis`, organization `wwronlwuwytwbioagyke`, region `us-east-1`, PostgreSQL 17, is now accessible.
 
-### A1. Establish baseline before designing a migration
-1. Capture schema definitions, constraints, foreign keys, indexes, RLS enablement/force status, policies, table/column grants, sequence grants, default privileges, role memberships, views, functions, and relevant storage policies.
-2. Reconcile the live schema with repository migration history. The lack of recorded migrations means a baseline must be designed from the actual schema, not inferred or recreated by guesswork.
-3. Identify every authorized client and integration that uses the project. Do not revoke privileges until compatibility is understood.
-4. Confirm a recovery route and appropriate backup/export before any DDL or privilege changes.
+Read-only inspection confirmed five public tables:
+- `profiles`
+- `garages`
+- `diagnostic_cases`
+- `maintenance_reminders`
+- `repair_records`
+
+All five reported zero rows during inspection, all have RLS enabled, and none has FORCE RLS enabled. The migration list is empty. No public-schema views, functions, or triggers were found. Storage system tables exist, but no buckets or storage policies were returned.
+
+### Security findings requiring remediation
+
+1. **Public profile disclosure:** `profiles` has a public SELECT policy with expression `true`; `anon` has SELECT privilege. The table contains email and role fields.
+2. **Role self-escalation risk:** authenticated users have UPDATE privilege on their own profile, including the `role` column. The current policy does not restrict writable columns, and the role constraint permits `admin`.
+3. **Shared-case disclosure:** public SELECT on `diagnostic_cases` is allowed when `is_shared = true`, but all columns are returned. The table includes owner IDs, vehicle references, and private notes; no column projection/redaction is present.
+4. **Broad API grants:** `anon` and `authenticated` have SELECT, INSERT, UPDATE, DELETE, TRUNCATE, REFERENCES, and TRIGGER on each of the five public tables.
+5. **Broad default ACLs:** future public tables, sequences, and functions receive broad privileges for `anon`, `authenticated`, and `service_role`.
+6. **Cross-owner references:** row-level user ownership checks do not by themselves ensure a linked vehicle belongs to the same user as a diagnostic case, reminder, or repair record.
+7. **RLS mode:** RLS is enabled but not forced on all five public tables.
+8. **Performance advisor:** seven unindexed foreign keys, eight RLS initialization-plan warnings, and five multiple-permissive-policy warnings.
+
+The Supabase security advisor returned no lints. This does not negate the manual authorization findings. No exploit or synthetic-user negative test has been run. Do not connect the frontend or apply production changes based on this audit alone.
+
+## Phase A — Database security and recovery
+
+### A1. Complete baseline and compatibility assessment
+1. Capture schema definitions, constraints, foreign keys, indexes, RLS enablement/force status, policies, table/column grants, sequence grants, default privileges, role memberships, views, functions, triggers, storage configuration, Auth settings, extensions, and migration history.
+2. Identify every authorized client and integration using the project. Do not revoke privileges until compatibility is understood.
+3. Verify backup/PITR availability and document a recovery route before any DDL or privilege change.
+4. Reconcile the live schema with repository migration history. The empty migration list means a baseline must be designed from the actual schema, not inferred or recreated by guesswork.
 
 ### A2. Target access model
-- Anonymous visitors: no direct access to account and vehicle-history tables by default.
-- Authenticated users: only the minimum operations needed for their own records.
-- Administrators: access only through a separately controlled, explicitly authorized mechanism.
-- Public sharing: never expose private rows by simply setting a sharing flag. If public case sharing is approved later, expose a separate, explicitly allowlisted representation.
+- Anonymous visitors: no direct access to private profile or vehicle-history tables by default.
+- Authenticated users: only the minimum operations required by an approved feature, scoped to their own rows and linked vehicles.
+- Administrators: access only through a separately controlled, explicitly authorized role-assignment process.
+- Public sharing: no direct public reads from private case rows. If public sharing is approved later, use a separate allowlisted representation with explicit consent and moderation.
 
-### A3. Specific controls to design
-- Revoke unnecessary API-role privileges, especially `TRUNCATE`, `TRIGGER`, and `REFERENCES`, and unnecessary writes. Grant only operations required by approved features.
-- Scope RLS policies to intended roles and enforce ownership for both the record and any linked vehicle on insert/update.
-- Protect profile columns and prevent users from changing their own role. Use a separately controlled role-assignment process.
-- Review policy evaluation patterns for performance only after preserving their exact semantics.
-- Review each foreign-key index against actual query patterns and add only justified indexes.
-- Do not implement a public diagnostic library using these private account/history tables.
+### A3. Controls to design
+- Remove public SELECT from private profile data; protect email and authorization fields.
+- Prevent users from changing their own role or other authorization metadata.
+- Redesign shared diagnostic cases so only explicitly approved fields are exposed.
+- Restrict API-role privileges to the minimum required. Remove unnecessary TRUNCATE, TRIGGER, REFERENCES, and unneeded DML grants.
+- Review default privileges for tables, sequences, and functions for every relevant object owner/schema.
+- Scope RLS policies to intended roles and enforce ownership for both the record and any linked vehicle on INSERT/UPDATE.
+- Review policy evaluation patterns for performance only after preserving exact authorization semantics.
+- Review each foreign-key index against expected query patterns and add only justified indexes.
+- Do not implement the public diagnostic library using private account/history tables.
 
 ### A4. Security acceptance tests (synthetic users and records only)
 - Anonymous requests cannot read private profiles, garages, reminders, or repair records.
 - User A cannot read, update, or delete User B's records.
-- Forged user IDs and vehicle IDs cannot bypass ownership rules.
+- User A cannot link a case, reminder, or repair record to User B's vehicle.
 - Normal users cannot grant themselves privileged roles.
 - Shared diagnostic cases reveal only explicitly approved fields.
 - API roles cannot perform unneeded destructive/administrative operations.
 - Invalid, expired, or unauthorized requests fail closed without exposing private data.
 
-No production migration should be generated or applied until the schema baseline, compatibility assessment, test environment, and recovery plan are reviewed and approved.
+No production migration should be generated or applied until the baseline, compatibility assessment, test environment, and recovery plan are reviewed and separately approved.
 
 ## Phase B — CI and reproducible dependencies
 
-1. Confirm the supported Node.js version and pin it consistently for CI and local development.
-2. Generate and review a real `package-lock.json` using the selected npm version. Do not hand-author or guess dependency resolutions.
-3. Check for unintended dependency changes and commit the lockfile in the proposed branch.
-4. Update the quality workflow to use checkout, setup-node with npm caching, `npm ci`, `npm run lint`, and `npm run build`.
-5. Add focused tests for search, filtering, detail dialogs, and no-results behavior only after identifying the existing code/test structure and choosing the smallest justified test dependency.
-6. Keep workflow permissions least-privilege and do not introduce deployment permissions into the quality workflow.
-7. Validate a clean install, strict TypeScript checking, and Vite production build. Do not mark checks passed without actual logs.
+1. Confirm the supported Node.js/npm versions and pin them consistently for CI and local development.
+2. Generate and review a real `package-lock.json` using npm with registry access. Do not hand-author or guess dependency resolutions.
+3. Check for unintended dependency changes and commit the lockfile on a feature branch.
+4. Update quality CI to use `npm ci`, `npm run lint`, and `npm run build` only after the lockfile is committed.
+5. Add focused tests for search, filtering, Guided Intake selection, detail dialogs, and no-results behavior using the smallest justified test setup.
+6. Keep workflow permissions least-privilege and do not add deployment permissions to quality CI.
+7. Validate a clean install, TypeScript checking, Vite production build, and actual interaction tests. Do not mark checks passed without logs.
 
-The current scripts already run TypeScript checking through `npm run lint` and before the Vite build. Preserve strict TypeScript settings.
+The current main quality workflow passed, but that does not make dependency installation reproducible or prove browser behavior.
 
-## Phase C — Deployment workflow (separate approval gate)
+## Phase C — Hosting and release control
 
-The existing manual deployment workflow targets legacy static files. A future proposed patch must build the Vite application and publish the contents of `dist/`, including correct GitHub Pages base-path configuration. It must remain manual-only and must not be triggered as part of this work. Any public release requires a separate explicit approval after the artifact, brand, accessibility, and smoke-test review.
+- Keep the custom Pages workflow manual-only and guarded to `main`.
+- A separate dynamic GitHub Pages build/deployment event succeeded on the latest main commit. Verify the Pages source setting and live URL with the owner; do not assume the event was an approved launch.
+- Do not trigger another deployment or change Pages settings during remediation.
+- Before any future public release, complete mechanic review, authoritative references, brand/IP review, accessibility/browser QA, privacy/safety notices, and explicit owner approval.
 
 ## Phase D — Documentation reconciliation
 
-Update these files while retaining historical context:
-- `README.md`: current architecture, commands, setup, and known limitations.
-- `docs/security-and-integration-audit.md`: distinguish verified current findings from stale static-site findings and pending remediation.
-- `docs/supabase-integration-and-migrations.md`: record the current project baseline, access design, migration-history gap, and safeguards.
-- `docs/hosting-and-launch-readiness.md`: correct build/artifact descriptions and retain the deployment hold.
-- `docs/stage-1-qa-audit.md`: preserve historical results while clearly identifying the current React/Vite app and unverified behavior.
+Maintain the following as evidence-based records:
+- `README.md`: current application architecture, setup, and limitations.
+- `docs/security-and-integration-audit.md`: current verified security findings and unresolved risks.
+- `docs/supabase-integration-and-migrations.md`: project baseline, access design, migration gap, and safeguards.
+- `docs/hosting-and-launch-readiness.md`: custom workflow, observed dynamic Pages event, and release hold.
+- `docs/stage-1-qa-audit.md`: preserve historical findings while identifying the current React/Vite app and unverified runtime behavior.
 
-Every audit statement should be labeled as one of: verified current fact, historical finding, proposed change, or unverified/blocked.
+Label each audit statement as a verified current fact, historical finding, proposed change, or unverified/blocked item.
 
 ## Required review package
 
@@ -101,8 +136,8 @@ Before applying consequential changes, present:
 - CI installs reproducibly from the committed lockfile and passes lint/build checks.
 - Functional tests cover the agreed core interactions.
 - Documentation accurately distinguishes current state from history and proposals.
-- No production database change, public deployment, paid resource, or frontend Supabase integration occurs without separate approval.
+- No production database change, Pages setting change, public deployment, paid resource, or frontend Supabase integration occurs without separate explicit approval.
 
 ## Current status
 
-This document is a plan, not evidence that remediation has been performed. The security inspection was read-only. No production privileges, policies, schema, data, GitHub default-branch files, or deployment settings were changed as part of the inspection.
+The live Supabase project is accessible and has been re-inventoried. The security findings above are verified from read-only metadata and SQL catalog queries; they are not remediated. GitHub main quality checks pass, but a lockfile and browser-level tests are still missing. A dynamic Pages deployment event succeeded, but live URL and Pages source configuration remain unverified. No database, production setting, or website deployment was changed as part of this audit.
