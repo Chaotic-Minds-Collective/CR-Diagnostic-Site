@@ -47,6 +47,6 @@ npm run build
 
 ## Brand and intellectual property
 
-The current emblem and mascot are original concept assets, not approved final brand artwork. The commercial name, tagline, mascot/helper names, and production identity remain undecided. See `docs/brand-identity-direction.md` and `docs/asset-inventory.md`.
+The current emblem and mascot are original concept assets, not approved final brand artwork. The commercial name, tagline, mascot/helper names, and production identity remain undecided. See `docs/brand-identity-direction.md` for the identity direction, asset inventory, and project decisions.
 
 The creative direction uses original anime-horror automotive energy without reproducing recognizable franchise characters, costumes, logos, weapons, or promotional compositions. Preliminary trademark/common-law review and final owner approval are required before identity finalization.
