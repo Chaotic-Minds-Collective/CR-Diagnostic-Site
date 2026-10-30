@@ -3,6 +3,7 @@ import { CaseWorksheet } from './components/CaseWorksheet';
 import { DetailDialog } from './components/DetailDialog';
 import { DiagnosticLab } from './components/DiagnosticLab';
 import { GuidedTriage } from './components/GuidedTriage';
+import { ReferenceDesk } from './components/ReferenceDesk';
 import { GuidesSection } from './components/GuidesSection';
 import { Header } from './components/Header';
 import { HeroSection } from './components/HeroSection';
@@ -84,6 +85,7 @@ export const App: React.FC = () => {
         <GuidesSection onOpenDetail={setActiveDetail} />
         <LearningSection />
         <SafetySection />
+        <ReferenceDesk />
         <AboutSection />
       </main>
       <SiteFooter />
