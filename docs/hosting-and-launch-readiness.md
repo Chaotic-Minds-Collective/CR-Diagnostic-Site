@@ -4,36 +4,61 @@
 
 The public website is a React 19 / TypeScript single-page application built with Vite. Its educational diagnostic library is bundled locally; it does not need Supabase to serve public pages. The frontend is not connected to Supabase.
 
-Keep the Supabase GitHub integration enabled only as needed for reviewed database work. Do not enable automatic database branching or production database deployment without a separately reviewed requirement and explicit approval.
+The root `package.json` currently defines:
+- `npm run lint`: TypeScript validation via `tsc --noEmit`
+- `npm run build`: TypeScript project build followed by `vite build`
 
-## Prepared deployment path
+The repository does not currently contain `package-lock.json`. CI uses `npm install`, so dependency resolution is not yet reproducible through `npm ci`. Generate and review a real lockfile using the selected Node/npm versions; do not hand-author dependency resolutions.
 
-- GitHub Pages deployment workflow: `.github/workflows/deploy-pages.yml`
+## Custom GitHub Pages workflow
+
+- Workflow: `.github/workflows/deploy-pages.yml`
 - Trigger: manual only (`workflow_dispatch`)
-- Production guard: the deployment job runs only when manually started from `main`
+- Guard: deployment job runs only when manually started from `main`
 - Build: Node.js 22, dependency installation, TypeScript validation, and Vite production build
-- Published artifact: the Vite `dist/` directory
-- Asset base: relative paths so bundled assets can resolve from a GitHub Pages project path or a root domain
-- No deployment is triggered by pull requests or pushes through this workflow.
+- Artifact: Vite `dist/` directory
+- Asset base: relative paths for GitHub Pages project paths and root-domain hosting
+- The custom workflow is not triggered by pushes or pull requests.
 
-A GitHub Pages `pages build and deployment` run was recorded as successful for commit `f206c8ee948d19a1aa7a5b2290df03b729fcec13` on 2026-10-29. The repository API connection does not expose the Pages configuration or verify the currently served URL and artifact. Confirm the Pages source and live behavior in repository settings before treating the site as released. This record is not owner approval for a launch.
+## Important Pages deployment observation
+
+GitHub recorded a separate **`pages build and deployment`** run:
+- Run ID: `41008189696`
+- Commit: `0872893a815638f341e4bf798222a1c50603122d`
+- Event: `dynamic`
+- Conclusion: `success`
+- Run time: 2026-10-30 UTC
+
+This was not the custom `workflow_dispatch` workflow described above. The available repository read access does not establish which Pages source setting produced the dynamic run or confirm the currently served URL/content. A successful Pages build/deployment run means the repository must be treated as potentially published until the owner verifies GitHub Settings → Pages and the live site.
+
+**Do not trigger another deployment or change Pages settings as part of this remediation.** Verify the current publication state with the owner. A successful deployment event is not evidence of owner launch approval.
+
+## Quality and verification status
+
+- The latest main-branch application quality run for commit `0872893` completed successfully.
+- The custom Pages workflow source now builds `dist/`, correcting the earlier legacy-static-file packaging mismatch.
+- No committed npm lockfile exists.
+- Automated component/interaction tests and full browser/accessibility testing remain outstanding.
+- The GitHub Pages live URL, Pages source configuration, mobile behavior, screen-reader behavior, and runtime content have not been independently verified.
 
 ## Before public launch
 
+- [ ] Verify the current Pages source setting and whether the site is publicly served; do not change settings without approval.
+- [ ] Review the currently served URL and confirm the artifact/content matches the approved release.
+- [ ] Generate and commit a real npm lockfile on a feature branch; move CI to `npm ci` only after it exists and passes.
 - [ ] Run the built application and test mobile navigation, search, category filters, symptom cards, Guided Intake, and guide details.
 - [ ] Review keyboard navigation, focus visibility, screen-reader announcements, and narrow mobile viewports.
 - [ ] Have a qualified mechanic review diagnostic content and add authoritative, vehicle-appropriate references.
-- [ ] Check that all visible functionality is real and that placeholders are clearly identified.
+- [ ] Check that all visible functionality is real and placeholders are clearly identified.
 - [ ] Confirm final public-facing name, copy, and original artwork approvals.
 - [ ] Complete the brand/IP review and document unresolved concerns.
 - [ ] Confirm privacy, terms, accessibility, and safety notices appropriate to the actual feature set.
 - [ ] Owner explicitly approves public launch.
-- [ ] In GitHub repository Settings → Pages, verify GitHub Actions is the intended build/deployment source.
-- [ ] Only after all checks and explicit approval, manually run the deployment workflow from `main` and verify the resulting URL.
+- [ ] Only after all checks and explicit approval, use the approved release process.
 
 ## Known limitations
 
 - No database, authentication, saved diagnostic history, AI diagnosis, VIN decoding, external vehicle data, payments, or custom domain is configured.
-- The diagnostic content is draft educational material and must not be presented as mechanic-reviewed.
-- Browser-level visual and interaction QA remains outstanding.
-- The workflow prepares a release path; it does not authorize or perform a release by itself.
+- Diagnostic content remains draft educational material and must not be presented as mechanic-reviewed.
+- Browser-level visual, interaction, and accessibility QA remains outstanding.
+- The custom deployment workflow prepares a release path; it does not authorize a release by itself.
